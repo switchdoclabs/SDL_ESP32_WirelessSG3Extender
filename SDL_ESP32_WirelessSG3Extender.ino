@@ -358,6 +358,8 @@ void MQTTreconnect(bool reboot) {
   // Loop until we're reconnected
   if (!MQTTclient.connected()) {
     int i = 0;
+    Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.1  ");
+    Serial.println(ESP.getFreeHeap());
     while (i < 5)
     {
       Serial.print("Attempting MQTT connection...");
@@ -367,6 +369,8 @@ void MQTTreconnect(bool reboot) {
       // Attempt to connect
       Serial.print("client name=");
       Serial.println(clientId);
+      Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.2  ");
+      Serial.println(ESP.getFreeHeap());
       if (MQTTclient.connect(clientId.c_str())) {
         Serial.println("connected");
         // Once connected, publish an announcement...
@@ -376,14 +380,19 @@ void MQTTreconnect(bool reboot) {
         topic = "SGS/" + myID + "/Valves";
         Serial.print("sub to topic=");
         Serial.println(topic);
-
+        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.3  ");
+        Serial.println(ESP.getFreeHeap());
         MQTTclient.subscribe(topic.c_str());
+        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.3.1  ");
+        Serial.println(ESP.getFreeHeap());
 
         break;
 
       } else {
         Serial.print("failed, rc=");
         Serial.print(MQTTclient.state());
+        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.4  ");
+        Serial.println(ESP.getFreeHeap());
         Serial.println(" try again in 2 seconds");
         // Wait 2 seconds before retrying
         vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -391,6 +400,9 @@ void MQTTreconnect(bool reboot) {
       }
       i++;
     }
+
+    Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.5  ");
+    Serial.println(ESP.getFreeHeap());
     // check for 5 failures and then reboot
     if ((i >= 5) && (reboot == true))
     {
@@ -1020,14 +1032,14 @@ void setup()
     1);               // Specific Core
 
 
-  xTaskCreatePinnedToCore(
-    taskReadBluetooth,          /* Task function. */
-    "taskReadBluetooth",        /* String with name of task. */
-    20000,            /* Stack size in words. */
-    NULL,             /* Parameter passed as input of the task */
-    2,                /* Priority of the task. */
-    NULL,             /* Task handle. */
-    0);               // Specific Core
+  // xTaskCreatePinnedToCore(
+  //  taskReadBluetooth,          /* Task function. */
+  //  "taskReadBluetooth",        /* String with name of task. */
+  //   20000,            /* Stack size in words. */
+  //   NULL,             /* Parameter passed as input of the task */
+  //   2,                /* Priority of the task. */
+  //   NULL,             /* Task handle. */
+  //   0);               // Specific Core
 
 
   xTaskCreatePinnedToCore(
@@ -1070,9 +1082,123 @@ void setup()
 
 }
 
+int readCount = 0;
+long firstHeap, lastHeap;   // memory problem debug
+
 void loop() {
 
   MQTTclient.loop();
+
+
+  // scan bluetooth sensors if required
+
+
+  //flowerCare = new FlowerCare();
+
+
+
+  if (uxSemaphoreGetCount( xSemaphoreReadBluetooth ) > 0)
+  {
+
+    blinkBluePixel(0, 1, 150);
+    Serial.print("Before FreeHeap=");
+    firstHeap = ESP.getFreeHeap();
+    Serial.println(firstHeap);
+
+    // If the flag "doConnect" is true then we have scanned for and found the desired
+    // BLE Server with which we wish to connect.  Now we connect to it.  Once we are
+    // connected we set the connected flag to be true.
+    if (doConnect == true) {
+      flowerCare->connectToServer();
+      doConnect = false;
+    }
+
+    //try
+    {
+
+      if (connected == true)
+      {
+        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>1 connected=true =");
+        Serial.println(ESP.getFreeHeap());
+
+        Serial.printf("Name: %s\n", flowerCare->getName().c_str());
+        std::string myMacAddress = flowerCare->getMacAddress();
+        Serial.printf("Mac address: %s\n", myMacAddress.c_str());
+        int batterylevel = flowerCare->getBatteryLevel();
+
+        Serial.printf("Battery level: %d %%\n", batterylevel);
+        RealTimeEntry *myRealTimeEntry;
+        std::string firmware;
+
+        firmware = flowerCare->getFirmwareVersion();
+        Serial.printf("Firmware version: %s\n", firmware.c_str());
+
+
+        myRealTimeEntry = flowerCare->getRealTimeData();
+
+        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2  connected=true = ");
+        Serial.println(ESP.getFreeHeap());
+
+        Serial.printf("Real time data: \n%s\n", myRealTimeEntry->toString().c_str() );
+
+
+        //Serial.printf("Historical data: \n");
+        //int epochTimeInSeconds = flowerCare->getEpochTimeInSeconds();
+        //Serial.printf("Epoch time: %d seconds or ", epochTimeInSeconds);
+        //flowerCare->printSecondsInDays(epochTimeInSeconds);
+        //std::vector<HistoricalEntry> historicalEntries = flowerCare->getHistoricalData();
+        //for(std::vector<HistoricalEntry>::size_type i = 0; i != historicalEntries.size(); i++)
+        // Serial.printf("Entry #%d:\n%s\n", i, historicalEntries[i].toString().c_str());
+
+        readCount++;
+        Serial.print("readCount=");
+        Serial.println(readCount);
+        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5  connected=true = ");
+        Serial.println(ESP.getFreeHeap());
+        sendMQTTBlueTooth(myMacAddress, myRealTimeEntry, batterylevel, firmware, readCount);
+        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>3  connected=true = ");
+        Serial.println(ESP.getFreeHeap());
+
+        Serial.println("Waiting 20 seconds");
+        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>4 connected=true = ");
+        Serial.println(ESP.getFreeHeap());
+
+
+        vTaskDelay(20000 / portTICK_PERIOD_MS);
+        //delete flowerCare;
+        //flowerCare = new FlowerCare();
+
+        connected = false;
+
+
+      }
+    }
+    /* catch (...)
+      {
+       Serial.println(">>>>>>>>>Top level exception caught  - reinitializing");
+       //flowerCare->scanBLE();
+       //BLEDevice::deinit(false);
+       flowerCare = new FlowerCare();
+      }
+    */
+
+    vTaskDelay(6000 / portTICK_PERIOD_MS);
+
+    Serial.print("Before  scanBLEFreeHeap=");
+    Serial.println(ESP.getFreeHeap());
+
+    flowerCare->scanBLE();
+
+    Serial.print("After FreeHeap=");
+    lastHeap = ESP.getFreeHeap();
+
+    Serial.println(lastHeap);
+
+    Serial.print("-------------->>>>>>Heap Difference:");
+    Serial.println(lastHeap - firstHeap);
+  }
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+
 
 
   // nothing in main loop

@@ -6,7 +6,7 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
 
 
 
- Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.1  connected=true = ");
+  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.1  connected=true = ");
   Serial.println(ESP.getFreeHeap());
 
 
@@ -23,7 +23,7 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
   Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.3  connected=true = ");
   Serial.println(ESP.getFreeHeap());
 
-  
+
   /* Temperature:  24.30°C   >> Published
     06:54:29.060 -> -- Moisture:     0 %   >> Published
     06:54:29.060 -> -- Light:        2571 lux   >> Published
@@ -33,9 +33,9 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
     client address
   */
   strcpy(myAddString , "{");
-  
+
   strcat(myAddString, "\"id\": \"");
-  
+
   strcat(myAddString, myID.c_str());
   strcat(myAddString, "\", \"messagetype\": \"");
   snprintf(buffer, sizeof(buffer), "%d", MQTTBLUETOOTHSENSOR);
@@ -46,7 +46,8 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
 
   //buffer now contains a string like 02/22/2013 05:03:0
 
-
+  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.3.1  connected=true = ");
+  Serial.println(ESP.getFreeHeap());
   strcat(myAddString, buffer);
 
   strcat(myAddString, "\", \"macaddress\": \"");
@@ -62,7 +63,8 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
   snprintf(buffer, sizeof(buffer), "%d", myRealTimeEntry->brightness);
   strcat(myAddString, buffer);
 
-
+  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.3.2  connected=true = ");
+  Serial.println(ESP.getFreeHeap());
   strcat(myAddString, "\", \"moisture\": \"");
 
 
@@ -87,7 +89,8 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
 
   snprintf(buffer, sizeof(buffer), "%d", readCount);
   strcat(myAddString, buffer);
-
+  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.3.3  connected=true = ");
+  Serial.println(ESP.getFreeHeap());
   strcat(myAddString, "\", \"sensorType\": \"");
 
   strcat(myAddString, "BT1");
@@ -95,7 +98,8 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
   strcat(myAddString, "\"");
 
 
-
+  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.3.4  connected=true = ");
+  Serial.println(ESP.getFreeHeap());
 
 
   strcat(myAddString, "}"); //Send the request
@@ -108,10 +112,12 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
   Serial.println( myAddString);
   int result;
   // Once connected, publish an announcement...
-    strcpy(buffer, "SGS/");
+  strcpy(buffer, "SGS/");
   strcat(buffer, myID.c_str());
   Serial.print("Topic=");
   Serial.println(buffer);
+  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.4.1  connected=true = ");
+  Serial.println(ESP.getFreeHeap());
   result = MQTTclient.publish(buffer,  myAddString);
   Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.5  connected=true = ");
   Serial.println(ESP.getFreeHeap());

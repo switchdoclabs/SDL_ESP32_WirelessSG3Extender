@@ -480,7 +480,7 @@ class FlowerCare {
 #endif
     }
 };
-static FlowerCare* flowerCare;
+
 
 /*
   // BUILT-IN: setup to init and loop for updates ------------------------------------------------------------------

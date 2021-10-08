@@ -4,6 +4,9 @@
 
 #include "Flora.h"
 
+FlowerCare* flowerCare;
+// static FlowerCare* flowerCare;
+
 void blinkBluePixel(int pixel, int count, int time);
 
 int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, int battery, std::string firmware, int readCount);
