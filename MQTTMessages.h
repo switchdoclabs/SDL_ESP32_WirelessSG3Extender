@@ -6,7 +6,9 @@
 #define MQTTDEBUG       3
 #define MQTTSENSORS     4
 #define MQTTBLUETOOTHSENSOR 5
-
+#define MQTTREBOOT  6
+#define MQTTHYDROPONICS 7
+#define MQTTHYDROPONICSLEVEL 8
 
 // received Messages
 

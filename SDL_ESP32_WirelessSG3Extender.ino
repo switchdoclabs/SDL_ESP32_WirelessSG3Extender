@@ -1,5 +1,5 @@
 // Filename SDL_ESP32_WirelessSG3Extender
-// Started Version 004 September 2021
+// Started Version 036 October 2021
 // SwitchDoc Labs, LLC
 //
 
@@ -8,7 +8,7 @@
 
 
 
-#define SGSEXTENDERESP32VERSION "032"
+#define SGSEXTENDERESP32VERSION "036"
 
 
 #define CONTROLLERBOARD "V1"
@@ -24,6 +24,8 @@
 
 #define EXTDEBUG
 
+#undef HEAPDEBUG
+
 #define MQTT_DEBUG
 
 #define SX1502ADDRESS 0x20
@@ -31,6 +33,10 @@
 #define RELAYADDRESS 0x11
 #define LCDADDRESS 0x3E
 
+
+// how often to read the Bluetooth Sensors
+//#define BLUETOOTHREADDELAY 900000L
+#define BLUETOOTHREADDELAY 60000L
 
 
 //#include "BLEDevice.h"
@@ -105,6 +111,9 @@ __asm volatile ("nop");
 #define DISPLAY_MOISTURE_3 28
 #define DISPLAY_MOISTURE_4 29
 #define DISPLAY_IPNAMEID 30
+#define DISPLAY_BLUETOOTH 31
+
+// Next display count would be DISPLAY_BLUETOOTH + MAXBLUETOOTHDEVICES (currently 8, so next display would be 39)
 
 #define NUMFLAKES 10
 #define XPOS 0
@@ -129,6 +138,8 @@ bool GPIOExt_Present = false;
 bool RELAY_Present = false;
 bool ADCExt_Present = false;
 bool LCD_Present = false;
+bool OneWire_Present = false;
+bool Level_Present = false;
 
 
 
@@ -143,6 +154,7 @@ int MQTT_PORT;
 
 String myID;
 
+String macID;
 
 float BatteryVoltage;
 float BatteryCurrent;
@@ -156,7 +168,10 @@ float SolarPanelCurrent;
 int valveState[8];
 float valveTime[8];
 float moistureSensors[4];
+long moistureSensorsRaw[4];
 int moistureSensorEnable[4];
+String moistureSensorType[4];
+
 
 #include "SDL_Arduino_SX1502.h"
 
@@ -165,7 +180,8 @@ SDL_Arduino_SX1502 sx1502(SX1502ADDRESS);
 #define MAXBLUETOOTHDEVICES 8
 // Bluetooth Sensors array
 String BluetoothAddresses[MAXBLUETOOTHDEVICES];
-
+float LastTemperatureBluetoothRead[MAXBLUETOOTHDEVICES];
+int LastMoistureBluetoothRead[MAXBLUETOOTHDEVICES];
 
 
 // For REST return Values
@@ -213,6 +229,20 @@ Preferences preferences;
   }
 
 esp_wps_config_t config = WPS_CONFIG_INIT_DEFAULT(ESP_WPS_MODE);
+
+
+// Hydroponics
+
+
+struct HydroponicsData {
+  float temperature = -1000.0;
+  float rawLevel = -1;
+  int rawTurbidity = -1;
+  int rawTDS = -1;
+  int level = -1;
+};
+
+HydroponicsData latestHydroponicsData;
 
 
 // MQTT
@@ -358,8 +388,10 @@ void MQTTreconnect(bool reboot) {
   // Loop until we're reconnected
   if (!MQTTclient.connected()) {
     int i = 0;
+#ifdef HEAPDEBUG
     Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.1  ");
     Serial.println(ESP.getFreeHeap());
+#endif
     while (i < 5)
     {
       Serial.print("Attempting MQTT connection...");
@@ -369,8 +401,10 @@ void MQTTreconnect(bool reboot) {
       // Attempt to connect
       Serial.print("client name=");
       Serial.println(clientId);
+#ifdef HEAPDEBUG
       Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.2  ");
       Serial.println(ESP.getFreeHeap());
+#endif
       if (MQTTclient.connect(clientId.c_str())) {
         Serial.println("connected");
         // Once connected, publish an announcement...
@@ -380,19 +414,24 @@ void MQTTreconnect(bool reboot) {
         topic = "SGS/" + myID + "/Valves";
         Serial.print("sub to topic=");
         Serial.println(topic);
+#ifdef HEAPDEBUG
         Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.3  ");
         Serial.println(ESP.getFreeHeap());
+#endif
         MQTTclient.subscribe(topic.c_str());
+#ifdef HEAPDEBUG
         Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.3.1  ");
         Serial.println(ESP.getFreeHeap());
-
+#endif
         break;
 
       } else {
         Serial.print("failed, rc=");
         Serial.print(MQTTclient.state());
+#ifdef HEAPDEBUG
         Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.4  ");
         Serial.println(ESP.getFreeHeap());
+#endif
         Serial.println(" try again in 2 seconds");
         // Wait 2 seconds before retrying
         vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -400,9 +439,10 @@ void MQTTreconnect(bool reboot) {
       }
       i++;
     }
-
+#ifdef HEAPDEBUG
     Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.5  ");
     Serial.println(ESP.getFreeHeap());
+#endif
     // check for 5 failures and then reboot
     if ((i >= 5) && (reboot == true))
     {
@@ -523,12 +563,67 @@ struct MyAnimationState
 };
 
 
+#include "DFRobot_VL53L0X.h"
+
+/*****************Keywords instruction*****************/
+//Continuous--->Continuous measurement model
+//Single------->Single measurement mode
+//High--------->Accuracy of 0.25 mm
+//Low---------->Accuracy of 1 mm
+/*****************Function instruction*****************/
+//setMode(ModeState mode, PrecisionState precision)
+//*This function is used to set the VL53L0X mode
+//*mode: Set measurement mode       Continuous or Single
+//*precision: Set the precision     High or Low
+//void start()
+//*This function is used to enabled VL53L0X
+//float getDistance()
+//*This function is used to get the distance
+//uint16_t getAmbientCount()
+//*This function is used to get the ambient count
+//uint16_t getSignalCount()
+//*This function is used to get the signal count
+//uint8_t getStatus();
+//*This function is used to get the status
+//void stop()
+//*This function is used to stop measuring
+
+
+DFRobotVL53L0X hydroponicsLevelSensor;
+
+// GPIO where the DS18B20 is connected to
+const int oneWireBus = 16;
+
+#include "OneWire.h"
+#include "DallasTemperature.h"
+
+// Setup a oneWire instance to communicate with any OneWire devices
+OneWire oneWire(oneWireBus);
+
+// Pass our oneWire reference to Dallas Temperature sensor
+DallasTemperature DS18B20sensor(&oneWire);
+
+bool checkForOneWire()
+{
+  DS18B20sensor.requestTemperatures();
+  float Temperature = DS18B20sensor.getTempCByIndex(0);
+  if (Temperature < -100.0)
+    return false;
+  else
+  {
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    DS18B20sensor.requestTemperatures();
+    Temperature = DS18B20sensor.getTempCByIndex(0);
+    Serial.print("Initial DS18B20 Senssor =");
+    Serial.println(Temperature);
+    return true;
+  }
+}
+
+
 // readSensors
 
 #include "ReadSensors.h"
-
-
-
 
 // RTOS
 
@@ -555,8 +650,14 @@ void initialState()
   for (i = 0; i < 4; i++)
   {
     moistureSensors[i] = 0.0;
+    moistureSensorsRaw[i] = 0;
     moistureSensorEnable[i] = 1;   // enable sensor.  Can be turned off on controller
   }
+  moistureSensorType[0] = "TDS1";
+  moistureSensorType[1] = "TUR1";
+  moistureSensorType[2] = "C1";
+  moistureSensorType[3] = "C1";
+
 
 }
 
@@ -574,6 +675,56 @@ int countBluetoothSensors()
   return count;
 }
 
+
+int bluetoothDeviceCount;
+
+
+
+void restartMQTT()
+{
+  Serial.println("--------");
+  Serial.println("MQTT Restart");
+  Serial.println("--------");
+  /* Serial.print("MQTT_IP=");
+    Serial.println(MQTT_IP);
+    Serial.print("MQTT_PORT=");
+    Serial.println(MQTT_PORT);
+  */
+  MQTTclient.disconnect();
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  MQTTreconnect(true);
+  //delete MQTTclient;
+  /*
+    MQTTclient = PubSubClient(espClient);
+    MQTTclient.setServer(MQTT_IP.c_str(), MQTT_PORT);
+    MQTTclient.setCallback(MQTTcallback);
+    //blinkIPAddress();
+    MQTTreconnect(true);
+  */
+}
+
+bool checkForLevelSensor()
+{
+  uint8_t val1;
+
+  //Set I2C sub-device address
+  hydroponicsLevelSensor.begin(0x50);
+  //Set to Back-to-back mode and high precision mode
+  hydroponicsLevelSensor.setMode(Single, High);
+  //Laser rangefinder begins to work
+    hydroponicsLevelSensor.start();
+
+  val1 = hydroponicsLevelSensor.getModelID();
+  Serial.print("Device ID: "); Serial.println(val1, HEX);
+  Serial.println("");
+    Serial.print("Distance: ");Serial.println(hydroponicsLevelSensor.getDistance());
+
+if (val1 == 0xEE)
+  return true;
+  else
+  return false;
+}
+
 void setup()
 {
 
@@ -583,7 +734,10 @@ void setup()
   for (i = 0; i < MAXBLUETOOTHDEVICES; i++)
   {
     BluetoothAddresses[i] = "";
+    LastTemperatureBluetoothRead[i] = -1000.0;
+    LastMoistureBluetoothRead[i] = -100;
   }
+
 
   // Start Serial
   Serial.begin(115200);
@@ -617,12 +771,30 @@ void setup()
   if (checkForI2CAddress(0x49))
     ADCExt_Present = true;
 
+  if (checkForOneWire())
+    OneWire_Present = true;
+
+  if (checkForLevelSensor())
+    Level_Present = true;
+
   // start up lcd
   if (LCD_Present)
   {
     startlcd();
   }
 
+
+  // Start the DS18B20 sensor
+  if (OneWire_Present)
+  {
+    DS18B20sensor.begin();
+  }
+  // Start the Level Sensor
+  if (Level_Present)
+  {
+
+    hydroponicsLevelSensor.start();
+  }
 
 
 
@@ -710,8 +882,8 @@ void setup()
   // Append the last two bytes of the MAC (HEX'd) to string to make unique
   uint8_t mac[WL_MAC_ADDR_LENGTH];
   WiFi.softAPmacAddress(mac);
-  String macID = String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
-                 String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
+  macID = String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
+          String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
   macID.toUpperCase();
   myID = macID;
 
@@ -964,7 +1136,7 @@ void setup()
   myMQTTMessage +=  String( return_reset_reason(rtc_get_reset_reason(1)));
 
 
-  sendMQTT(MQTTDEBUG, myMQTTMessage);
+  sendMQTT(MQTTREBOOT, myMQTTMessage);
 #endif
 
   if (LCD_Present) {
@@ -994,6 +1166,27 @@ void setup()
   xTaskCreatePinnedToCore(
     taskSendSensors,          /* Task function. */
     "taskSendSensors",        /* String with name of task. */
+    7000,            /* Stack size in words. */
+    NULL,             /* Parameter passed as input of the task */
+    2,                /* Priority of the task. */
+    NULL,             /* Task handle. */
+    1);               // Specific Core
+
+
+
+  xTaskCreatePinnedToCore(
+    taskReadSendHydroponics,          /* Task function. */
+    "taskReadSendHydroponics",        /* String with name of task. */
+    7000,            /* Stack size in words. */
+    NULL,             /* Parameter passed as input of the task */
+    2,                /* Priority of the task. */
+    NULL,             /* Task handle. */
+    1);               // Specific Core
+
+
+  xTaskCreatePinnedToCore(
+    taskReadSendHydroponicsLevel,          /* Task function. */
+    "taskReadSendHydroponicsLevel",        /* String with name of task. */
     7000,            /* Stack size in words. */
     NULL,             /* Parameter passed as input of the task */
     2,                /* Priority of the task. */
@@ -1067,12 +1260,17 @@ void setup()
   //Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
   xSemaphoreGive( xSemaphoreOLEDLoopUpdate);   // initialize it on
 
+  bluetoothDeviceCount = countBluetoothSensors();
+
   Serial.print("countBlueToothSensors=");
-  Serial.println(countBluetoothSensors());
-  if (countBluetoothSensors() > 0)
+  Serial.println(bluetoothDeviceCount);
+  if (bluetoothDeviceCount > 0)
   { // Startup Task
     Serial.println("Starting up Bluetooth");
-    flowerCare = new FlowerCare();
+
+    Serial.println("Initialize BLE client...");
+    BLEDevice::init("");
+    BLEDevice::setPower(ESP_PWR_LVL_P7);
     xSemaphoreGive( xSemaphoreReadBluetooth);
 
   }
@@ -1085,6 +1283,7 @@ void setup()
 int readCount = 0;
 long firstHeap, lastHeap;   // memory problem debug
 
+
 void loop() {
 
   MQTTclient.loop();
@@ -1093,103 +1292,61 @@ void loop() {
   // scan bluetooth sensors if required
 
 
-  //flowerCare = new FlowerCare();
-
-
 
   if (uxSemaphoreGetCount( xSemaphoreReadBluetooth ) > 0)
   {
 
-    blinkBluePixel(0, 1, 150);
-    Serial.print("Before FreeHeap=");
     firstHeap = ESP.getFreeHeap();
-    Serial.println(firstHeap);
-
-    // If the flag "doConnect" is true then we have scanned for and found the desired
-    // BLE Server with which we wish to connect.  Now we connect to it.  Once we are
-    // connected we set the connected flag to be true.
-    if (doConnect == true) {
-      flowerCare->connectToServer();
-      doConnect = false;
-    }
-
-    //try
-    {
-
-      if (connected == true)
-      {
-        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>1 connected=true =");
-        Serial.println(ESP.getFreeHeap());
-
-        Serial.printf("Name: %s\n", flowerCare->getName().c_str());
-        std::string myMacAddress = flowerCare->getMacAddress();
-        Serial.printf("Mac address: %s\n", myMacAddress.c_str());
-        int batterylevel = flowerCare->getBatteryLevel();
-
-        Serial.printf("Battery level: %d %%\n", batterylevel);
-        RealTimeEntry *myRealTimeEntry;
-        std::string firmware;
-
-        firmware = flowerCare->getFirmwareVersion();
-        Serial.printf("Firmware version: %s\n", firmware.c_str());
+#ifdef HEAPDEBUG
+    Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>> 0  main loop ");
+    Serial.println(ESP.getFreeHeap());
+#endif
 
 
-        myRealTimeEntry = flowerCare->getRealTimeData();
+    // process devices
+    for (int i = 0; i < bluetoothDeviceCount; i++) {
+      int tryCount = 0;
+      char* deviceMacAddress = (char *) BluetoothAddresses[i].c_str();
+      BLEAddress floraAddress(deviceMacAddress);
 
-        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2  connected=true = ");
-        Serial.println(ESP.getFreeHeap());
+      while (tryCount < RETRY) {
+        tryCount++;
 
-        Serial.printf("Real time data: \n%s\n", myRealTimeEntry->toString().c_str() );
+        if (processFloraDevice(floraAddress, deviceMacAddress, readBattery, tryCount)) {
+          readCount++;
 
+          Serial.print("ReadCount==");
+          Serial.println(readCount);
+          if (latestFloraData.validData)
+          {
+            // Good data, send it.
 
-        //Serial.printf("Historical data: \n");
-        //int epochTimeInSeconds = flowerCare->getEpochTimeInSeconds();
-        //Serial.printf("Epoch time: %d seconds or ", epochTimeInSeconds);
-        //flowerCare->printSecondsInDays(epochTimeInSeconds);
-        //std::vector<HistoricalEntry> historicalEntries = flowerCare->getHistoricalData();
-        //for(std::vector<HistoricalEntry>::size_type i = 0; i != historicalEntries.size(); i++)
-        // Serial.printf("Entry #%d:\n%s\n", i, historicalEntries[i].toString().c_str());
-
-        readCount++;
-        Serial.print("readCount=");
-        Serial.println(readCount);
-        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5  connected=true = ");
-        Serial.println(ESP.getFreeHeap());
-        sendMQTTBlueTooth(myMacAddress, myRealTimeEntry, batterylevel, firmware, readCount);
-        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>3  connected=true = ");
-        Serial.println(ESP.getFreeHeap());
-
-        Serial.println("Waiting 20 seconds");
-        Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>4 connected=true = ");
-        Serial.println(ESP.getFreeHeap());
-
-
-        vTaskDelay(20000 / portTICK_PERIOD_MS);
-        //delete flowerCare;
-        //flowerCare = new FlowerCare();
-
-        connected = false;
-
-
+            sendMQTTBlueTooth(BluetoothAddresses[i], latestFloraData.temperature, latestFloraData.moisture, latestFloraData.light, latestFloraData.conductivity, latestFloraData.battery,  readCount);
+            break;
+          }
+#ifdef HEAPDEBUG
+          Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>> 0.3  main loop ");
+          Serial.println(ESP.getFreeHeap());
+#endif
+        }
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
       }
+      vTaskDelay(1500 / portTICK_PERIOD_MS);
     }
-    /* catch (...)
-      {
-       Serial.println(">>>>>>>>>Top level exception caught  - reinitializing");
-       //flowerCare->scanBLE();
-       //BLEDevice::deinit(false);
-       flowerCare = new FlowerCare();
-      }
-    */
-
+#ifdef HEAPDEBUG
+    Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>> 0.4  main loop ");
+    Serial.println(ESP.getFreeHeap());
+#endif
     vTaskDelay(6000 / portTICK_PERIOD_MS);
-
+#ifdef HEAPDEBUG
     Serial.print("Before  scanBLEFreeHeap=");
     Serial.println(ESP.getFreeHeap());
 
-    flowerCare->scanBLE();
+
+#endif
 
     Serial.print("After FreeHeap=");
+
     lastHeap = ESP.getFreeHeap();
 
     Serial.println(lastHeap);
@@ -1197,12 +1354,12 @@ void loop() {
     Serial.print("-------------->>>>>>Heap Difference:");
     Serial.println(lastHeap - firstHeap);
   }
-  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  vTaskDelay(BLUETOOTHREADDELAY / portTICK_PERIOD_MS);
 
 
 
-  // nothing in main loop
-  vTaskDelay(2000 / portTICK_PERIOD_MS);
+  // nothing else in main loop
+
 
 
 }

@@ -8,7 +8,7 @@ void startlcd()
   lcd.begin(16, 2);
 
  
-  lcd.print(" Smart Garden 3");
+  lcd.print(" SmartGarden 3");
   lcd.setCursor(0, 1);
   lcd.print("   Version:");
   lcd.print(SGSEXTENDERESP32VERSION);

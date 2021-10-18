@@ -1,27 +1,26 @@
 
 char myAddString[250];  // special non-stack buffer for MQTTBlueTooth
 
-int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, int battery, std::string firmware, int readCount)
+int sendMQTTBlueTooth(String MacAddress, int temperature, int moisture, int brightness, int conductivity,  int battery,  int readCount)
 {
 
 
 
-  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.1  connected=true = ");
-  Serial.println(ESP.getFreeHeap());
 
 
   if (!MQTTclient.connected()) {
     MQTTreconnect(true);
+    Serial.println("reconnected");
+  }
+  else
+  {
+    Serial.println("connected");
   }
   MQTTclient.loop();
 
 
   char buffer[64];
-  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.2  connected=true = ");
-  Serial.println(ESP.getFreeHeap());
 
-  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.3  connected=true = ");
-  Serial.println(ESP.getFreeHeap());
 
 
   /* Temperature:  24.30°C   >> Published
@@ -42,12 +41,11 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
   strcat(myAddString, buffer);
   strcat(myAddString, "\", \"timestamp\": \"");
 
-  snprintf(buffer, sizeof(buffer), "%02d/%02d/%4d %02d:%02d:%02d", month(), day(), year(), hour(), minute(), second());
+  snprintf(buffer, sizeof(buffer), "%02d-%02d-%02d %02d:%02d:%02d", year(), month(), day(), hour(), minute(), second());
 
   //buffer now contains a string like 02/22/2013 05:03:0
 
-  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.3.1  connected=true = ");
-  Serial.println(ESP.getFreeHeap());
+
   strcat(myAddString, buffer);
 
   strcat(myAddString, "\", \"macaddress\": \"");
@@ -55,25 +53,23 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
 
   strcat(myAddString, "\", \"temperature\": \"");
 
-  snprintf(buffer, sizeof(buffer), "%d", myRealTimeEntry->temperature);
+  snprintf(buffer, sizeof(buffer), "%d", temperature);
   strcat(myAddString, buffer);
 
   strcat(myAddString, "\", \"brightness\": \"");
 
-  snprintf(buffer, sizeof(buffer), "%d", myRealTimeEntry->brightness);
+  snprintf(buffer, sizeof(buffer), "%d", brightness);
   strcat(myAddString, buffer);
 
-  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.3.2  connected=true = ");
-  Serial.println(ESP.getFreeHeap());
   strcat(myAddString, "\", \"moisture\": \"");
 
 
-  snprintf(buffer, sizeof(buffer), "%d", myRealTimeEntry->moisture);
+  snprintf(buffer, sizeof(buffer), "%d", moisture);
   strcat(myAddString, buffer);
 
   strcat(myAddString, "\", \"conductivity\": \"");
 
-  snprintf(buffer, sizeof(buffer), "%d", myRealTimeEntry->conductivity);
+  snprintf(buffer, sizeof(buffer), "%d", conductivity);
   strcat(myAddString, buffer);
 
 
@@ -82,15 +78,11 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
   snprintf(buffer, sizeof(buffer), "%d", battery);
   strcat(myAddString, buffer);
 
-  strcat(myAddString, "\", \"firmware\": \"");
-  strcat(myAddString , firmware.c_str());
-
   strcat(myAddString , "\", \"readCount\": \"");
 
   snprintf(buffer, sizeof(buffer), "%d", readCount);
   strcat(myAddString, buffer);
-  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.3.3  connected=true = ");
-  Serial.println(ESP.getFreeHeap());
+
   strcat(myAddString, "\", \"sensorType\": \"");
 
   strcat(myAddString, "BT1");
@@ -98,14 +90,15 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
   strcat(myAddString, "\"");
 
 
-  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.3.4  connected=true = ");
-  Serial.println(ESP.getFreeHeap());
+
 
 
   strcat(myAddString, "}"); //Send the request
+#ifdef HEAPDEBUG
+
   Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.4  connected=true = ");
   Serial.println(ESP.getFreeHeap());
-
+#endif
   // publish it
 
   Serial.println( "Sending Bluetooth MQTT Packet");
@@ -116,15 +109,17 @@ int sendMQTTBlueTooth(std::string MacAddress, RealTimeEntry *myRealTimeEntry, in
   strcat(buffer, myID.c_str());
   Serial.print("Topic=");
   Serial.println(buffer);
+#ifdef HEAPDEBUG
   Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.4.1  connected=true = ");
   Serial.println(ESP.getFreeHeap());
+#endif
   result = MQTTclient.publish(buffer,  myAddString);
-  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.5  connected=true = ");
-  Serial.println(ESP.getFreeHeap());
   Serial.print("MQTT publish result=");
   Serial.println(result);
+#ifdef HEAPDEBUG
   Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>2.5.6  connected=true = ");
   Serial.println(ESP.getFreeHeap());
+#endif
   return result;
 }
 
@@ -216,6 +211,75 @@ int sendMQTT(int messageType, String argument)
 
 
       }
+
+    case MQTTREBOOT:
+      {
+
+        AddString = "\"id\": \"";
+        AddString += myID;
+        AddString += "\", \"messagetype\": \"";
+        AddString += messageType;
+        AddString += "\", \"timestamp\": \"";
+        AddString += myTime;
+        AddString += "\", \"value\": \"";
+        AddString += argument;
+
+        SendString = "{" + AddString +  "\"}"; //Send the request
+        break;
+
+
+      }
+
+
+    case MQTTHYDROPONICS:
+      {
+
+        AddString = "\"id\": \"";
+        AddString += myID;
+        AddString += "\", \"messagetype\": \"";
+        AddString += messageType;
+        AddString += "\", \"timestamp\": \"";
+        AddString += myTime;
+
+        AddString += "\", \"temperature\": \"";
+        AddString += String(latestHydroponicsData.temperature) + ",";
+
+        AddString += "\", \"rawlevel\": \"";
+        AddString += String(latestHydroponicsData.rawLevel) + ",";
+
+        AddString += "\", \"rawturbidity\": \"";
+        AddString += String(latestHydroponicsData.rawTurbidity) + ",";
+
+        AddString += "\", \"rawtds\": \"";
+        AddString += String(latestHydroponicsData.rawTDS) + ",";
+
+
+
+        SendString = "{" + AddString +  "\"}"; //Send the request
+        break;
+
+
+      }
+
+    case MQTTHYDROPONICSLEVEL:
+      {
+
+        AddString = "\"id\": \"";
+        AddString += myID;
+        AddString += "\", \"messagetype\": \"";
+        AddString += messageType;
+        AddString += "\", \"timestamp\": \"";
+        AddString += myTime;
+
+        AddString += "\", \"rawlevel\": \"";
+        AddString += String(latestHydroponicsData.rawLevel) + ",";
+
+        SendString = "{" + AddString +  "\"}"; //Send the request
+        break;
+
+
+      }
+
     case MQTTSENSORS:
       {
 
@@ -237,12 +301,30 @@ int sendMQTT(int messageType, String argument)
         AddString += "\", \"sensorValues\": \"";
         for (i = 0; i < 4; i++)
         {
+          if (moistureSensorEnable[i] == 0)
+            AddString += String(-1) + ",";
+          else
+            AddString += String(moistureSensors[i]) + ",";
 
-          AddString += String(moistureSensors[i]) + ",";
+        }
+
+        AddString += "\", \"rawSensorValues\": \"";
+        for (i = 0; i < 4; i++)
+        {
+          if (moistureSensorEnable[i] == 0)
+            AddString += String(-1) + ",";
+          else
+            AddString += String(moistureSensorsRaw[i]) + ",";
 
         }
         AddString += "\", \"sensorType\": \"";
-        String mySensorType = "C1,C1,C1,C1";
+        String mySensorType = "";
+        for (i = 0; i < 4; i++)
+        {
+          mySensorType += moistureSensorType[i];
+          if (i < 3)
+            mySensorType += ",";
+        }
         AddString += mySensorType + "\"";
 
 

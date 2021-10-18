@@ -44,6 +44,7 @@ int checkForID(String command) {
   RESTreturnString += String(RELAY_Present) + ",";
 
   RESTreturnString +=  String(ADCExt_Present) + ",";
+  RESTreturnString +=  String(OneWire_Present) + ",";
   RESTreturnString += SGSEXTENDERESP32VERSION;
 
 
@@ -232,12 +233,9 @@ int readMoistureSensors(String command) {
     readSensors();
     for (i = 0; i < 4; i++)
     {
-      if (moistureSensorEnable[i] == 0)
-      {
-        RESTreturnString += String(moistureSensors[i]) + ",";
-      }
       RESTreturnString += String(moistureSensorEnable[i]) + ",";
       RESTreturnString += String(moistureSensors[i]) + ",";
+      RESTreturnString += String(moistureSensorsRaw[i]) + ",";
     }
     String mySensorType = "C1,C1,C1,C1";
     RESTreturnString += mySensorType + ",";

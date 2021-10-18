@@ -97,13 +97,7 @@ void updateDisplay(int displayMode)
           setDisplayLineLCD(1, buffer);
           buffer[0] = '\0';
 
-#define WL_MAC_ADDR_LENGTH 6
-          // Append the last two bytes of the MAC (HEX'd) to string to make unique
-          uint8_t mac[WL_MAC_ADDR_LENGTH];
-          WiFi.softAPmacAddress(mac);
-          String macID = String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
-                         String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
-          macID.toUpperCase();
+
           String mySSID;
           mySSID = "SG3WExt-" + macID;
           buffer[0] = '\0';
@@ -189,10 +183,9 @@ void updateDisplay(int displayMode)
         break;
 
       case DISPLAY_IPNAMEID:
-
         {
-
-          setDisplayLineLCD(0, "IP Address:");
+          sprintf(buffer, "Device: %s", myID);
+          setDisplayLineLCD(0, buffer);
 
           IPAddress myIp2 = WiFi.localIP();
           sprintf(buffer, "%d.%d.%d.%d", myIp2[0], myIp2[1], myIp2[2], myIp2[3]);
@@ -204,16 +197,12 @@ void updateDisplay(int displayMode)
 
       case DISPLAY_STATUS:
 
-        setDisplayLineLCD(0, "SGS W Ext Status");
-        buffer[0] = '\0';
 
-
-        sprintf(buffer, "VS:  %1i%1i%1i%1i%1i%1i%1i%1i", valveState[0], valveState[1], valveState[2], valveState[3], valveState[4], valveState[5], valveState[6], valveState[7]);
-        setDisplayLineLCD(1, buffer);
+        sprintf(buffer, "SVS: %1i%1i%1i%1i%1i%1i%1i%1i", valveState[0], valveState[1], valveState[2], valveState[3], valveState[4], valveState[5], valveState[6], valveState[7]);
+        setDisplayLineLCD(0, buffer);
         buffer[0] = '\0';
         sprintf(buffer, "MSE: %1i%1i%1i%1i", moistureSensorEnable[0], moistureSensorEnable[1], moistureSensorEnable[2], moistureSensorEnable[3]);
-        setDisplayLineLCD(2, buffer);
-        setDisplayLineLCD(3, "");
+        setDisplayLineLCD(1, buffer);
         break;
 
       case DISPLAY_MOISTURE_1:
@@ -226,14 +215,53 @@ void updateDisplay(int displayMode)
 
         // Displays Moisture Levels
         buffer[0] = '\0';
-        sprintf(buffer, "MSensor #%i", unit + 1);
+        sprintf(buffer, "Sensor %s #%i", moistureSensorType[unit], unit + 1);
         setDisplayLineLCD(0, buffer);
         buffer[0] = '\0';
-        sprintf(buffer, "%3.1f%%", moistureSensors[unit]);
+        sprintf(buffer, "%3.1f%% Raw:%d", moistureSensors[unit], moistureSensorsRaw[unit]);
         setDisplayLineLCD(1, buffer);
-        setDisplayLineLCD(2, "");
+
         break;
 
+
+      case DISPLAY_BLUETOOTH:
+      case DISPLAY_BLUETOOTH+1:
+      case DISPLAY_BLUETOOTH+2:
+      case DISPLAY_BLUETOOTH+3:
+      case DISPLAY_BLUETOOTH+4:
+      case DISPLAY_BLUETOOTH+5:
+      case DISPLAY_BLUETOOTH+6:
+      case DISPLAY_BLUETOOTH+7:
+        {
+        unit = displayMode - DISPLAY_BLUETOOTH;
+
+        // Displays Bluetooth Levels
+
+        String pickAddress;
+        pickAddress =  BluetoothAddresses[unit].substring(BluetoothAddresses[unit].length()-5, BluetoothAddresses[unit].length());
+        buffer[0] = '\0';
+        sprintf(buffer, "BTS %s  T/H", pickAddress);
+        setDisplayLineLCD(0, buffer);
+        buffer[0] = '\0';
+        if ((LastMoistureBluetoothRead[unit] < 0) || (LastTemperatureBluetoothRead[unit] < -500))
+        {
+          sprintf(buffer, "NA/NA");
+        }
+        else
+        {
+
+          if (EnglishOrMetric == 0)
+          {
+            sprintf(buffer, "%4.1fF/%d", LastTemperatureBluetoothRead[unit], LastMoistureBluetoothRead[unit]);
+          }
+          else
+          {
+            sprintf(buffer, "%4.1fC/%d", LastTemperatureBluetoothRead[unit], LastMoistureBluetoothRead[unit]);
+          }
+        }
+        setDisplayLineLCD(1, buffer);
+        }
+        break;
 
 
       case DISPLAY_DEVICEPRESENT:
@@ -395,7 +423,7 @@ void writeAllDisplayLines(int DisplayMode)
 
           lcd.setCursor(0, i);
           vTaskDelay(100 / portTICK_PERIOD_MS);
-          
+
           lcd.print(String(displayLines[i]));
 
         }
@@ -407,6 +435,14 @@ void writeAllDisplayLines(int DisplayMode)
     case DISPLAY_MOISTURE_2:
     case DISPLAY_MOISTURE_3:
     case DISPLAY_MOISTURE_4:
+    case DISPLAY_BLUETOOTH:
+    case DISPLAY_BLUETOOTH+1:
+    case DISPLAY_BLUETOOTH+2:
+    case DISPLAY_BLUETOOTH+3:
+    case DISPLAY_BLUETOOTH+4:
+    case DISPLAY_BLUETOOTH+5:
+    case DISPLAY_BLUETOOTH+6:
+    case DISPLAY_BLUETOOTH+7:
       {
         int textSize = 2;
 
@@ -422,6 +458,9 @@ void writeAllDisplayLines(int DisplayMode)
         }
       }
       break;
+
+
+
 
     case DISPLAY_IPDISPLAY:
     case DISPLAY_IPNAMEID:

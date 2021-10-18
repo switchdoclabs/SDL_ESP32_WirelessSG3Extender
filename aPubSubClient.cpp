@@ -595,11 +595,15 @@ boolean PubSubClient::write(uint8_t header, uint8_t* buf, uint16_t length) {
   }
   return result;
 #else
+#ifdef HEAPDEBUG
   Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.3.1.3  connected=true = ");
   Serial.println(ESP.getFreeHeap());
+#endif
   rc = _client->write(buf + (MQTT_MAX_HEADER_SIZE - hlen), length + hlen);
+#ifdef HEAPDEBUG
   Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.3.1.4  connected=true = ");
   Serial.println(ESP.getFreeHeap());
+#endif
   lastOutActivity = millis();
   return (rc == hlen + length);
 #endif
@@ -621,8 +625,7 @@ boolean PubSubClient::subscribe(const char* topic, uint8_t qos) {
     // Too long
     return false;
   }
-  Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.3.1.1  ");
-  Serial.println(ESP.getFreeHeap());
+
   if (connected()) {
     // Leave room in the buffer for header and variable length field
     uint16_t length = MQTT_MAX_HEADER_SIZE;
@@ -634,8 +637,7 @@ boolean PubSubClient::subscribe(const char* topic, uint8_t qos) {
     this->buffer[length++] = (nextMsgId & 0xFF);
     length = writeString((char*)topic, this->buffer, length);
     this->buffer[length++] = qos;
-    Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.3.1.2  connected=true = ");
-    Serial.println(ESP.getFreeHeap());
+
     return write(MQTTSUBSCRIBE | MQTTQOS1, this->buffer, length - MQTT_MAX_HEADER_SIZE);
   }
   return false;
