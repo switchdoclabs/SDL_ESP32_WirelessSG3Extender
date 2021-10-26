@@ -48,12 +48,14 @@ void writePreferences()
   preferences.putString("MQTT_IP", MQTT_IP);
   preferences.putInt("MQTT_PORT", MQTT_PORT);
   preferences.putInt("SENSORCYCLE", sensorCycle);
+  preferences.putInt("HydroponicsMode", HydroponicsMode);
+  preferences.putInt("HydroponicsLevelMode", HydroponicsLevelMode);
 
   int i;
   for (i = 0; i < MAXBLUETOOTHDEVICES; i++)
   {
-    
-    String myString = "BTSENSOR"+String(i);
+
+    String myString = "BTSENSOR" + String(i);
 
     preferences.putString(myString.c_str(), BluetoothAddresses[i]);
   }
@@ -94,14 +96,20 @@ void writePreferences()
   Serial.println(MQTT_PORT);
   Serial.print("SensorCycle=");
   Serial.println(sensorCycle);
+  Serial.print("HydroponicsMode=");
+  Serial.println (HydroponicsMode);
+  Serial.print("HydroponicsLevelMode=");
+  Serial.println (HydroponicsLevelMode);
 
   for (i = 0; i < MAXBLUETOOTHDEVICES; i++)
   {
-
-    Serial.print("BluetoothAddresses[");
-    Serial.print(i);
-    Serial.print("]=");
-    Serial.println(BluetoothAddresses[i]);
+    if (BluetoothAddresses[i].length() > 0)
+    {
+      Serial.print("BluetoothAddresses[");
+      Serial.print(i);
+      Serial.print("]=");
+      Serial.println(BluetoothAddresses[i]);
+    }
   }
   Serial.println("--------------------------");
 
@@ -140,10 +148,12 @@ void readPreferences()
   int i;
   for (i = 0; i < MAXBLUETOOTHDEVICES; i++)
   {
-    String myString = "BTSENSOR"+String(i);
+    String myString = "BTSENSOR" + String(i);
     BluetoothAddresses[i] = preferences.getString(myString.c_str(), "");
   }
 
+  HydroponicsMode = preferences.getInt("HydroponicsMode", 0);
+  HydroponicsLevelMode = preferences.getInt("HydroponicsLevelMode", 0);
   preferences.end();
 
 #ifdef EXTDEBUG
@@ -177,14 +187,20 @@ void readPreferences()
   Serial.println(MQTT_PORT);
   Serial.print("SensorCycle=");
   Serial.println(sensorCycle);
-
+  Serial.print("HydroponicsMode=");
+  Serial.println (HydroponicsMode);
+    Serial.print("HydroponicsLevelMode=");
+  Serial.println (HydroponicsLevelMode);
+  
   for (i = 0; i < MAXBLUETOOTHDEVICES; i++)
   {
-
-    Serial.print("BluetoothAddresses[");
-    Serial.print(i);
-    Serial.print("]=");
-    Serial.println(BluetoothAddresses[i]);
+    if (BluetoothAddresses[i].length() > 0)
+    {
+      Serial.print("BluetoothAddresses[");
+      Serial.print(i);
+      Serial.print("]=");
+      Serial.println(BluetoothAddresses[i]);
+    }
   }
   Serial.println("--------------------------");
 

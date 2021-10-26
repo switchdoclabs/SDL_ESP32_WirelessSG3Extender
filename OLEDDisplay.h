@@ -218,7 +218,20 @@ void updateDisplay(int displayMode)
         sprintf(buffer, "Sensor %s #%i", moistureSensorType[unit], unit + 1);
         setDisplayLineLCD(0, buffer);
         buffer[0] = '\0';
-        sprintf(buffer, "%3.1f%% Raw:%d", moistureSensors[unit], moistureSensorsRaw[unit]);
+        if (moistureSensorType[unit] == "C1")
+        {
+          sprintf(buffer, "%3.1f%% Raw:%d", moistureSensors[unit], moistureSensorsRaw[unit]);
+        }
+        else
+        {
+          if (moistureSensorType[unit] == "TUR1")
+            sprintf(buffer, "Raw:%d", latestHydroponicsData.rawTurbidity);
+          else if (moistureSensorType[unit] == "TDS1")
+            sprintf(buffer, "Raw:%d", latestHydroponicsData.rawTDS);
+          else
+            sprintf(buffer, "Raw:%d", moistureSensorsRaw[unit]);
+
+        }
         setDisplayLineLCD(1, buffer);
 
         break;
@@ -233,33 +246,33 @@ void updateDisplay(int displayMode)
       case DISPLAY_BLUETOOTH+6:
       case DISPLAY_BLUETOOTH+7:
         {
-        unit = displayMode - DISPLAY_BLUETOOTH;
+          unit = displayMode - DISPLAY_BLUETOOTH;
 
-        // Displays Bluetooth Levels
+          // Displays Bluetooth Levels
 
-        String pickAddress;
-        pickAddress =  BluetoothAddresses[unit].substring(BluetoothAddresses[unit].length()-5, BluetoothAddresses[unit].length());
-        buffer[0] = '\0';
-        sprintf(buffer, "BTS %s  T/H", pickAddress);
-        setDisplayLineLCD(0, buffer);
-        buffer[0] = '\0';
-        if ((LastMoistureBluetoothRead[unit] < 0) || (LastTemperatureBluetoothRead[unit] < -500))
-        {
-          sprintf(buffer, "NA/NA");
-        }
-        else
-        {
-
-          if (EnglishOrMetric == 0)
+          String pickAddress;
+          pickAddress =  BluetoothAddresses[unit].substring(BluetoothAddresses[unit].length() - 5, BluetoothAddresses[unit].length());
+          buffer[0] = '\0';
+          sprintf(buffer, "BTS %s  T/H", pickAddress);
+          setDisplayLineLCD(0, buffer);
+          buffer[0] = '\0';
+          if ((LastMoistureBluetoothRead[unit] < 0) || (LastTemperatureBluetoothRead[unit] < -500))
           {
-            sprintf(buffer, "%4.1fF/%d", LastTemperatureBluetoothRead[unit], LastMoistureBluetoothRead[unit]);
+            sprintf(buffer, "NA/NA");
           }
           else
           {
-            sprintf(buffer, "%4.1fC/%d", LastTemperatureBluetoothRead[unit], LastMoistureBluetoothRead[unit]);
+
+            if (EnglishOrMetric == 0)
+            {
+              sprintf(buffer, "%4.1fF/%d", LastTemperatureBluetoothRead[unit], LastMoistureBluetoothRead[unit]);
+            }
+            else
+            {
+              sprintf(buffer, "%4.1fC/%d", LastTemperatureBluetoothRead[unit], LastMoistureBluetoothRead[unit]);
+            }
           }
-        }
-        setDisplayLineLCD(1, buffer);
+          setDisplayLineLCD(1, buffer);
         }
         break;
 

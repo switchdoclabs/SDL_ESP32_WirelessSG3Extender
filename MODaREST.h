@@ -1954,6 +1954,17 @@ class aREST {
 
       addToBufferF(F(", \"hardware\": "));
       addStringToBuffer(HARDWARE, true);
+      addToBufferF(F(", \"hydroponicsmode\": "));
+
+      if(HydroponicsMode == 1)
+      {
+              addStringToBuffer("true", true);
+      }
+      else
+      {
+              addStringToBuffer("false", true);
+      }
+
       addToBufferF(F(",\"return_string\": "));
       addStringToBuffer(RESTreturnString.c_str(), true);
 

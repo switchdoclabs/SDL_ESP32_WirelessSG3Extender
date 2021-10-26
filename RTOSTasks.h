@@ -12,6 +12,27 @@ int sendMQTTBlueTooth(String MacAddress, int temperature, int moisture, int brig
 
 
 
+void taskFetchInfrared( void * parameter)
+{
+  // Enter RTOS Task Loop
+  for (;;)  {
+
+    if (uxSemaphoreGetCount( xSemaphoreReadInfrared ) > 0)
+    {
+      xSemaphoreTake( xSemaphoreUseI2C, 10000);
+
+      ReadAMG8833Sensor();
+
+      
+      sendMQTT(MQTTINFRARED, "");
+      xSemaphoreGive( xSemaphoreUseI2C);
+
+    }
+
+    vTaskDelay(sensorCycle * 1000 / portTICK_PERIOD_MS);
+  }
+
+}
 
 
 void taskSendSensors( void * parameter)
@@ -39,12 +60,17 @@ void taskReadSendHydroponics( void * parameter)
 
     if (uxSemaphoreGetCount( xSemaphoreReadSensor ) > 0)
     {
-      xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
-      readHydroponicsSensors();
-      sendMQTT(MQTTHYDROPONICS, "");
-      xSemaphoreGive( xSemaphoreSensorsBeingRead);
 
+        if (HydroponicsMode == 1)
+        {
+        xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
+        readHydroponicsSensors();
+        sendMQTT(MQTTHYDROPONICS, "");
+        xSemaphoreGive( xSemaphoreSensorsBeingRead);
+        }
+ 
     }
+
     //vTaskDelay(600000 / portTICK_PERIOD_MS);
     vTaskDelay(sensorCycle * 1000 / portTICK_PERIOD_MS);
   }
@@ -58,11 +84,13 @@ void taskReadSendHydroponicsLevel( void * parameter)
 
     if (uxSemaphoreGetCount( xSemaphoreReadSensor ) > 0)
     {
-      xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
-      readHydroponicsLevelSensor();
-      sendMQTT(MQTTHYDROPONICSLEVEL, "");
-      xSemaphoreGive( xSemaphoreSensorsBeingRead);
-
+      if (HydroponicsLevelMode == 1)
+      {
+        xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
+        readHydroponicsLevelSensor();
+        sendMQTT(MQTTHYDROPONICSLEVEL, "");
+        xSemaphoreGive( xSemaphoreSensorsBeingRead);
+      }
     }
     //vTaskDelay(600000 / portTICK_PERIOD_MS);
     vTaskDelay(sensorCycle * 1000 / portTICK_PERIOD_MS);

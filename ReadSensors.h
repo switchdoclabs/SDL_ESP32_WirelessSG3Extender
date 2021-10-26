@@ -57,6 +57,8 @@ void printSensors();
 void readHydroponicsSensors()
 {
 
+
+  Serial.println("--ReadHydroponicsSensors");
   // Temperature
   if (OneWire_Present)
   {
@@ -70,6 +72,9 @@ void readHydroponicsSensors()
     } else
     {
       latestHydroponicsData.temperature = currentTemp;
+
+      Serial.print("--------------------------------------------------------->temperature=");
+      Serial.println(currentTemp);
     }
 
   }
@@ -77,29 +82,38 @@ void readHydroponicsSensors()
   {
     latestHydroponicsData.temperature = -1;
   }
-
+  Serial.println("--Before Level - ReadHydroponicsSensors");
   // Level
 
   if (Level_Present)
   {
 
+    xSemaphoreTake( xSemaphoreUseI2C,  portMAX_DELAY);
     hydroponicsLevelSensor.start();
+
     latestHydroponicsData.rawLevel = hydroponicsLevelSensor.getDistance();
+
+    Serial.print("--------------------------------------------------------->raw_distance=");
+    Serial.println(latestHydroponicsData.rawLevel);
   }
   else
   {
     latestHydroponicsData.rawLevel = -1.0;
   }
-
+  xSemaphoreGive( xSemaphoreUseI2C);
 
   // Turbidity
-
+  Serial.println("--Before Turbidity - ReadHydroponicsSensors");
 
   if (moistureSensorEnable[1] == 1)
     writeGPIOBit(1, true);
   else
     writeGPIOBit(1, false);
-    
+
+
+
+  vTaskDelay( 1000 / portTICK_PERIOD_MS);
+  // delay with it ont
   if (moistureSensorEnable[1] == 1)
   {
     xSemaphoreTake( xSemaphoreUseI2C,  portMAX_DELAY);
@@ -108,6 +122,8 @@ void readHydroponicsSensors()
     rawValue = ads1015.readADC_SingleEnded(1);
 
     latestHydroponicsData.rawTurbidity = rawValue;
+    Serial.print("--------------------------------------------------------->raw_turbidity=");
+    Serial.println(rawValue);
 
     xSemaphoreGive( xSemaphoreUseI2C);
   }
@@ -121,12 +137,14 @@ void readHydroponicsSensors()
 
   // TDS
 
-
+  Serial.println("--Before TDS - ReadHydroponicsSensors");
   if (moistureSensorEnable[0] == 1)
     writeGPIOBit(0, true);
   else
     writeGPIOBit(0, false);
-    
+
+
+
   if (moistureSensorEnable[0] == 1)
   {
     xSemaphoreTake( xSemaphoreUseI2C,  portMAX_DELAY);
@@ -135,6 +153,8 @@ void readHydroponicsSensors()
     rawValue = ads1015.readADC_SingleEnded(0);
 
     latestHydroponicsData.rawTDS = rawValue;
+    Serial.print("--------------------------------------------------------->raw_TDS=");
+    Serial.println(rawValue);
 
     xSemaphoreGive( xSemaphoreUseI2C);
   }
@@ -143,6 +163,8 @@ void readHydroponicsSensors()
 
   writeGPIOBit(0, false);
 
+
+  Serial.println("--End of ReadHydroponicsSensors");
 
 }
 void readHydroponicsLevelSensor()
@@ -168,8 +190,10 @@ void readSensors()
   }
 
 
+
   xSemaphoreTake( xSemaphoreUseI2C,  portMAX_DELAY);
   unsigned int rawValue;
+
   for (i = 0; i < 4; i++)
   {
     if (moistureSensorEnable[i] == 1)
@@ -220,5 +244,24 @@ void printSensors()
 
   if (printone)
     Serial.println(" ");
+
+}
+
+
+
+
+void ReadAMG8833Sensor()
+{
+  /*Read temp*/
+  amg8833.read_pixel_temperature(AMG8833_temp  );
+  /*Print 8X8 pixels value.*/
+  Serial.println("Temperature for 8X8 matrix are::");
+  for (int i = 0; i < PIXEL_NUM; i++) {
+    Serial.print(AMG8833_temp[i]);
+    Serial.print("  ");
+    if (0 == (i + 1) % 8) {
+      Serial.println(" ");
+    }
+  }
 
 }

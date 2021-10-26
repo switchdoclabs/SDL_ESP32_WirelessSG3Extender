@@ -8,7 +8,7 @@
 
 
 
-#define SGSEXTENDERESP32VERSION "036"
+#define SGSEXTENDERESP32VERSION "037"
 
 
 #define CONTROLLERBOARD "V1"
@@ -35,8 +35,8 @@
 
 
 // how often to read the Bluetooth Sensors
-//#define BLUETOOTHREADDELAY 900000L
-#define BLUETOOTHREADDELAY 60000L
+#define BLUETOOTHREADDELAY 900000L
+//#define BLUETOOTHREADDELAY 60000L
 
 
 //#include "BLEDevice.h"
@@ -140,6 +140,7 @@ bool ADCExt_Present = false;
 bool LCD_Present = false;
 bool OneWire_Present = false;
 bool Level_Present = false;
+bool AMG8833_Present = false;
 
 
 
@@ -151,6 +152,9 @@ int SolarMAXLiPo = 0;
 int sensorCycle = 600;
 String MQTT_IP;
 int MQTT_PORT;
+
+int HydroponicsMode = 0;
+int HydroponicsLevelMode = 0;
 
 String myID;
 
@@ -239,11 +243,19 @@ struct HydroponicsData {
   float rawLevel = -1;
   int rawTurbidity = -1;
   int rawTDS = -1;
-  int level = -1;
+  float rawlevel = -1;
+  int rawPh = -1;
 };
 
 HydroponicsData latestHydroponicsData;
 
+// AMG8833 pixels
+
+#include "Seeed_AMG8833_driver.h"
+
+float AMG8833_temp[PIXEL_NUM] = {0};
+
+AMG8833 amg8833;
 
 // MQTT
 
@@ -344,11 +356,13 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
         int myState = myJSON["state"];
         if ((myValve < 1) || (myValve > 8))
         {
+          xSemaphoreGive( xSemaphoreEvaluatingValves);
           return;
         }
 
         if (((myState == 0 ) || (myState == 1)) != true)
         {
+          xSemaphoreGive( xSemaphoreEvaluatingValves);
           return;
         }
 
@@ -647,16 +661,32 @@ void initialState()
 
   }
 
-  for (i = 0; i < 4; i++)
+  if (HydroponicsMode == 1)
   {
-    moistureSensors[i] = 0.0;
-    moistureSensorsRaw[i] = 0;
-    moistureSensorEnable[i] = 1;   // enable sensor.  Can be turned off on controller
+    for (i = 0; i < 4; i++)
+    {
+      moistureSensors[i] = 0.0;
+      moistureSensorsRaw[i] = 0;
+      moistureSensorEnable[i] = 1;   // enable sensor.  Can be turned off on controller
+    }
+    moistureSensorType[0] = "TDS1";
+    moistureSensorType[1] = "TUR1";
+    moistureSensorType[2] = "C1";
+    moistureSensorType[3] = "C1";
   }
-  moistureSensorType[0] = "TDS1";
-  moistureSensorType[1] = "TUR1";
-  moistureSensorType[2] = "C1";
-  moistureSensorType[3] = "C1";
+  else
+  {
+    for (i = 0; i < 4; i++)
+    {
+      moistureSensors[i] = 0.0;
+      moistureSensorsRaw[i] = 0;
+      moistureSensorEnable[i] = 1;   // enable sensor.  Can be turned off on controller
+    }
+    moistureSensorType[0] = "C1";
+    moistureSensorType[1] = "C1";
+    moistureSensorType[2] = "C1";
+    moistureSensorType[3] = "C1";
+  }
 
 
 }
@@ -712,17 +742,17 @@ bool checkForLevelSensor()
   //Set to Back-to-back mode and high precision mode
   hydroponicsLevelSensor.setMode(Single, High);
   //Laser rangefinder begins to work
-    hydroponicsLevelSensor.start();
+  hydroponicsLevelSensor.start();
 
   val1 = hydroponicsLevelSensor.getModelID();
   Serial.print("Device ID: "); Serial.println(val1, HEX);
   Serial.println("");
-    Serial.print("Distance: ");Serial.println(hydroponicsLevelSensor.getDistance());
+  Serial.print("Distance: "); Serial.println(hydroponicsLevelSensor.getDistance());
 
-if (val1 == 0xEE)
-  return true;
+  if (val1 == 0xEE)
+    return true;
   else
-  return false;
+    return false;
 }
 
 void setup()
@@ -771,6 +801,9 @@ void setup()
   if (checkForI2CAddress(0x49))
     ADCExt_Present = true;
 
+  if (checkForI2CAddress(0x69))
+    AMG8833_Present = true;
+
   if (checkForOneWire())
     OneWire_Present = true;
 
@@ -796,6 +829,15 @@ void setup()
     hydroponicsLevelSensor.start();
   }
 
+  // start the Infrared camera if present
+  if (AMG8833_Present == true)
+  {
+    if (amg8833.init()) {
+      Serial.println("amg8833 init failed!!!");
+      AMG8833_Present == false;
+    }
+    Serial.println("AMG8833 init OK!!!");
+  }
 
 
   // this resets all the neopixels to an off state
@@ -851,6 +893,12 @@ void setup()
 
   xSemaphoreUseI2C = xSemaphoreCreateBinary();
   xSemaphoreGive( xSemaphoreUseI2C);   // initialize
+
+  xSemaphoreReadInfrared = xSemaphoreCreateBinary();
+  xSemaphoreGive( xSemaphoreReadInfrared);   // initialize it on
+  xSemaphoreTake( xSemaphoreReadInfrared, 10);   // start with this off
+  
+  
 
 
   Serial.print("StartxSemaphoreUseI2C=");
@@ -1110,6 +1158,7 @@ void setup()
   rest.function("setSensorCycle", setSensorCycle);
   rest.function("restartMQTT", restartMQTT);
   rest.function("assignBluetoothSensors", assignBluetoothSensors);
+  rest.function("enableHydroponicsMode", enableHydroponicsMode);
 
   rest.function("updateSGS", updateSGS);
 
@@ -1148,6 +1197,22 @@ void setup()
   //Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
   // initialize valves
   initialState();
+
+  xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
+  readSensors();
+  if (HydroponicsMode == 1)
+  {
+    readHydroponicsSensors();
+  }
+  if (AMG8833_Present == true)
+  {
+    ReadAMG8833Sensor();
+
+    xSemaphoreGive( xSemaphoreReadInfrared);   // start the reads
+    
+  }
+  xSemaphoreGive( xSemaphoreSensorsBeingRead);
+
 
   //Serial.print("Post Initial State SetupxSemaphoreUseI2C=");
   //Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
@@ -1244,14 +1309,24 @@ void setup()
     NULL,             /* Task handle. */
     0);               // Specific Core
 
+
+  xTaskCreatePinnedToCore(
+    taskFetchInfrared,          /* Task function. */
+    "taskFetchInfrared",        /* String with name of task. */
+    5000,            /* Stack size in words. */
+    NULL,             /* Parameter passed as input of the task */
+    2,                /* Priority of the task. */
+    NULL,             /* Task handle. */
+    1);               // Specific Core
+
   Serial.println("RTOS Tasks Starting");
 
   //Serial.print("EndSetupxSemaphoreUseI2C=");
   //Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
 
-  xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
-  readSensors();
-  xSemaphoreGive( xSemaphoreSensorsBeingRead);
+
+
+
 
   // Start OLED Loop
 
@@ -1284,6 +1359,7 @@ int readCount = 0;
 long firstHeap, lastHeap;   // memory problem debug
 
 
+
 void loop() {
 
   MQTTclient.loop();
@@ -1296,11 +1372,13 @@ void loop() {
   if (uxSemaphoreGetCount( xSemaphoreReadBluetooth ) > 0)
   {
 
+
     firstHeap = ESP.getFreeHeap();
 #ifdef HEAPDEBUG
     Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>> 0  main loop ");
     Serial.println(ESP.getFreeHeap());
 #endif
+
 
 
     // process devices
@@ -1353,8 +1431,26 @@ void loop() {
 
     Serial.print("-------------->>>>>>Heap Difference:");
     Serial.println(lastHeap - firstHeap);
+
+
+
   }
-  vTaskDelay(BLUETOOTHREADDELAY / portTICK_PERIOD_MS);
+
+  // do our delay
+
+
+#define INCREMENT 100L
+  long i;
+
+  i = 0;
+  while (i < BLUETOOTHREADDELAY)
+  {
+    MQTTclient.loop();
+    vTaskDelay(INCREMENT / portTICK_PERIOD_MS);
+    i = i + INCREMENT;
+
+  }
+
 
 
 

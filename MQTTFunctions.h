@@ -242,18 +242,19 @@ int sendMQTT(int messageType, String argument)
         AddString += myTime;
 
         AddString += "\", \"temperature\": \"";
-        AddString += String(latestHydroponicsData.temperature) + ",";
+        AddString += String(latestHydroponicsData.temperature);
 
         AddString += "\", \"rawlevel\": \"";
-        AddString += String(latestHydroponicsData.rawLevel) + ",";
+        AddString += String(latestHydroponicsData.rawLevel) ;
 
         AddString += "\", \"rawturbidity\": \"";
-        AddString += String(latestHydroponicsData.rawTurbidity) + ",";
+        AddString += String(latestHydroponicsData.rawTurbidity) ;
 
         AddString += "\", \"rawtds\": \"";
-        AddString += String(latestHydroponicsData.rawTDS) + ",";
+        AddString += String(latestHydroponicsData.rawTDS) ;
 
-
+        AddString += "\", \"rawph\": \"";
+        AddString += String(latestHydroponicsData.rawPh) ;
 
         SendString = "{" + AddString +  "\"}"; //Send the request
         break;
@@ -275,6 +276,28 @@ int sendMQTT(int messageType, String argument)
         AddString += String(latestHydroponicsData.rawLevel) + ",";
 
         SendString = "{" + AddString +  "\"}"; //Send the request
+        break;
+
+
+      }
+
+    case MQTTINFRARED:
+      {
+
+        AddString = "\"id\": \"";
+        AddString += myID;
+        AddString += "\", \"messagetype\": \"";
+        AddString += messageType;
+        AddString += "\", \"timestamp\": \"";
+        AddString += myTime;
+
+        AddString += "\", \"infrareddata\": \"";
+        for(int i; i < PIXEL_NUM; i++)
+        {
+        AddString += String(AMG8833_temp[i]) + ",";
+        }
+        AddString += "\"";
+        SendString = "{" + AddString + "}"; //Send the request
         break;
 
 

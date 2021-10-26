@@ -184,7 +184,42 @@ int assignBluetoothSensors(String command) {
 
 }
 
+// Hydroponics Mode
 
+int enableHydroponicsMode(String command) {
+
+  // admin password, enableHydroponics, enableHydroponicsLevel
+  RESTreturnString = "";
+  Serial.println("---------->REST: enableHydroponicsMode");
+  Serial.print("Command =");
+  Serial.println(command);
+  String password;
+  password = getValue(command, ',', 0);
+  if (password == adminPassword)
+  {
+
+
+
+    if (getValue(command, ',', 1) != "")
+    {
+      int tempMode;
+      tempMode = getValue(command, ',', 1).toInt();
+      if (tempMode == 1)
+      {
+        initialState();
+      }
+      HydroponicsMode = getValue(command, ',', 1).toInt();
+    }
+    if (getValue(command, ',', 2) != "")
+      HydroponicsLevelMode = getValue(command, ',', 2).toInt();
+
+    writePreferences();
+    return 0;
+
+  }
+  return 1;
+
+}
 
 // Water Commands
 

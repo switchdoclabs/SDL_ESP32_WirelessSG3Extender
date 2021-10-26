@@ -9,6 +9,7 @@
 #define MQTTREBOOT  6
 #define MQTTHYDROPONICS 7
 #define MQTTHYDROPONICSLEVEL 8
+#define MQTTINFRARED 9
 
 // received Messages
 

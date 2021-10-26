@@ -24,3 +24,5 @@ SemaphoreHandle_t  xSemaphoreUseI2C;
 SemaphoreHandle_t  xSemaphoreUpdatingBluetooth;
 
 SemaphoreHandle_t  xSemaphoreReadBluetooth;
+
+SemaphoreHandle_t  xSemaphoreReadInfrared;
