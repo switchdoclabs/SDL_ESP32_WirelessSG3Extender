@@ -95,12 +95,13 @@ void readHydroponicsSensors()
 
     Serial.print("--------------------------------------------------------->raw_distance=");
     Serial.println(latestHydroponicsData.rawLevel);
+    xSemaphoreGive( xSemaphoreUseI2C);
   }
   else
   {
     latestHydroponicsData.rawLevel = -1.0;
   }
-  xSemaphoreGive( xSemaphoreUseI2C);
+  
 
   // Turbidity
   Serial.println("--Before Turbidity - ReadHydroponicsSensors");

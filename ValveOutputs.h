@@ -416,6 +416,8 @@ void turnOnAppropriateValves()
       writeValve(i + 1, 0);
     }
   }
+  Serial.print("ValveChange=");
+  Serial.println(valveChange);
 
   if (valveChange == true)
   {

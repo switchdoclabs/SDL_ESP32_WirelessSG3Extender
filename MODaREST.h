@@ -73,7 +73,7 @@
 
 // MQTT packet size
 #undef MQTT_MAX_PACKET_SIZE
-#define MQTT_MAX_PACKET_SIZE 512
+#define MQTT_MAX_PACKET_SIZE 1024
 
 // Using ESP8266 ?
 #if defined(ESP8266) || defined(ESP32)

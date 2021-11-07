@@ -8,7 +8,7 @@
 
 
 
-#define SGSEXTENDERESP32VERSION "037"
+#define SGSEXTENDERESP32VERSION "041"
 
 
 #define CONTROLLERBOARD "V1"
@@ -35,8 +35,8 @@
 
 
 // how often to read the Bluetooth Sensors
-#define BLUETOOTHREADDELAY 900000L
-//#define BLUETOOTHREADDELAY 60000L
+//#define BLUETOOTHREADDELAY 900000L
+#define BLUETOOTHREADDELAY 60000L
 
 
 //#include "BLEDevice.h"
@@ -131,7 +131,7 @@ IPAddress myConnectedIp;
 IPAddress myConnectedGateWay;
 IPAddress myConnectedMask;
 bool WiFiPresent = false;
-bool SunAirPlus_Present = false;
+bool Solar_Present = false;
 bool AirQualityPresent = false;
 bool TSL2591_Present = false;
 bool GPIOExt_Present = false;
@@ -897,8 +897,8 @@ void setup()
   xSemaphoreReadInfrared = xSemaphoreCreateBinary();
   xSemaphoreGive( xSemaphoreReadInfrared);   // initialize it on
   xSemaphoreTake( xSemaphoreReadInfrared, 10);   // start with this off
-  
-  
+
+
 
 
   Serial.print("StartxSemaphoreUseI2C=");
@@ -1209,7 +1209,7 @@ void setup()
     ReadAMG8833Sensor();
 
     xSemaphoreGive( xSemaphoreReadInfrared);   // start the reads
-    
+
   }
   xSemaphoreGive( xSemaphoreSensorsBeingRead);
 
@@ -1383,6 +1383,8 @@ void loop() {
 
     // process devices
     for (int i = 0; i < bluetoothDeviceCount; i++) {
+      Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>> Processing Bluetooth: ");
+      Serial.println(i);
       int tryCount = 0;
       char* deviceMacAddress = (char *) BluetoothAddresses[i].c_str();
       BLEAddress floraAddress(deviceMacAddress);
@@ -1445,6 +1447,12 @@ void loop() {
   i = 0;
   while (i < BLUETOOTHREADDELAY)
   {
+
+    if (!MQTTclient.connected()) {
+      MQTTreconnect(true);
+      Serial.println("reconnected");
+    }
+
     MQTTclient.loop();
     vTaskDelay(INCREMENT / portTICK_PERIOD_MS);
     i = i + INCREMENT;

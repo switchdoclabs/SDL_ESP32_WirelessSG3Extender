@@ -44,7 +44,12 @@ int checkForID(String command) {
   RESTreturnString += String(RELAY_Present) + ",";
 
   RESTreturnString +=  String(ADCExt_Present) + ",";
+
   RESTreturnString +=  String(OneWire_Present) + ",";
+  RESTreturnString +=  String(LCD_Present) + ",";
+  RESTreturnString +=  String(Level_Present) + ",";
+  RESTreturnString +=  String(AMG8833_Present) + ",";
+  RESTreturnString +=  String(Solar_Present) + ",";
   RESTreturnString += SGSEXTENDERESP32VERSION;
 
 
@@ -316,11 +321,13 @@ int  setSingleValve(String command) {
 
     if ((myValve < 1) || (myValve > 8))
     {
+      xSemaphoreGive( xSemaphoreEvaluatingValves);
       return 1;
     }
 
     if (((myState == 0 ) || (myState == 1)) != true)
     {
+      xSemaphoreGive( xSemaphoreEvaluatingValves);
       return 1;
     }
 
@@ -340,6 +347,7 @@ int  setSingleValve(String command) {
     xSemaphoreGive( xSemaphoreEvaluatingValves);
     return 0;
   }
+
   return 1;
 }
 

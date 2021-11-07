@@ -284,7 +284,7 @@ void updateDisplay(int displayMode)
 
           String myBuffer;
           myBuffer = "SAP: ";
-          if (SunAirPlus_Present == true)
+          if (Solar_Present == true)
           {
             myBuffer = myBuffer + "X ";
           }
@@ -389,11 +389,10 @@ void updateDisplay(int displayMode)
         break;
     }
 
-    xSemaphoreTake( xSemaphoreUseI2C, 30000);
+
 
     writeAllDisplayLines(displayMode);
 
-    xSemaphoreGive( xSemaphoreUseI2C);   // initialize
   }
 
 }
@@ -417,7 +416,10 @@ void setDisplayLineLCD(int lineNumber, char *value)
 
 void writeAllDisplayLines(int DisplayMode)
 {
+
+  xSemaphoreTake( xSemaphoreUseI2C, 30000);
   lcd.clear();
+
 
   switch (DisplayMode)
   {
@@ -508,5 +510,5 @@ void writeAllDisplayLines(int DisplayMode)
       break;
 
   }
-
+  xSemaphoreGive( xSemaphoreUseI2C);
 }
