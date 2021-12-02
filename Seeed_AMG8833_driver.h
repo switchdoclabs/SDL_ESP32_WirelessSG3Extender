@@ -117,7 +117,7 @@ typedef enum {
 #define FLAG_RESET_VALUE                    0X30
 
 
-#define DEFAULT_IIC_ADDR  0x69
+#define DEFAULT_IIC_ADDR  0x68
 
 class AMG_IIC_OPRTS {
   public:

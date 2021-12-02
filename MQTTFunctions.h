@@ -256,6 +256,20 @@ int sendMQTT(int messageType, String argument)
         AddString += "\", \"rawph\": \"";
         AddString += String(latestHydroponicsData.rawPh) ;
 
+        AddString += "\", \"rawmoisture4\": \"";
+        AddString += String(moistureSensorsRaw[3]) ;
+
+
+        String sensortypes;
+        sensortypes = "";
+        for (int i = 0; i < 4; i++)
+        {
+          sensortypes = sensortypes + moistureSensorType[i] + " ";
+        }
+        AddString += "\", \"sensortypes\": \"";
+        AddString += sensortypes;
+
+
         SendString = "{" + AddString +  "\"}"; //Send the request
         break;
 
@@ -292,9 +306,9 @@ int sendMQTT(int messageType, String argument)
         AddString += myTime;
 
         AddString += "\", \"infrareddata\": \"";
-        for(int i; i < PIXEL_NUM; i++)
+        for (int i; i < PIXEL_NUM; i++)
         {
-        AddString += String(AMG8833_temp[i]) + ",";
+          AddString += String(AMG8833_temp[i]) + ",";
         }
         AddString += "\"";
         SendString = "{" + AddString + "}"; //Send the request

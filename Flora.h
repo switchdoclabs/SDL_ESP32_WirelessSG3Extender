@@ -1,7 +1,7 @@
 //
 #include "NimBLEDevice.h"
 
-#undef FLORADEBUG
+#define FLORADEBUG
 
 struct floraSensorData {
   int temperature;
@@ -27,7 +27,7 @@ static BLEUUID uuid_write_mode("00001a00-0000-1000-8000-00805f9b34fb");
 
 const String  MQTT_BASE_TOPIC = "flora";
 
-#define RETRY 3
+#define BLUETOOTHRETRY 3
 
 boolean readBattery = true;
 

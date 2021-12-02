@@ -88,7 +88,10 @@ void writeGPIOBit(byte pin, byte value)
   byte valuebit;
   xSemaphoreTake( xSemaphoreUseI2C, portMAX_DELAY);
 
-
+  //Serial.print("Pin / value:");
+  //Serial.print(pin);
+  //Serial.print("/");
+  //Serial.println(value);
   currentValue = sx1502.readGPIO();
   if (currentValue == 0xFF)  // read again
   {

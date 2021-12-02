@@ -228,6 +228,8 @@ void updateDisplay(int displayMode)
             sprintf(buffer, "Raw:%d", latestHydroponicsData.rawTurbidity);
           else if (moistureSensorType[unit] == "TDS1")
             sprintf(buffer, "Raw:%d", latestHydroponicsData.rawTDS);
+         else if (moistureSensorType[unit] == "PH1")
+            sprintf(buffer, "Raw:%d", latestHydroponicsData.rawPh);
           else
             sprintf(buffer, "Raw:%d", moistureSensorsRaw[unit]);
 

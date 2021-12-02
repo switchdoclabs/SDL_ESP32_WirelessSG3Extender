@@ -106,7 +106,7 @@ SDL_Arduino_SX1502::SDL_Arduino_SX1502(uint8_t addr) {
 */
 /**************************************************************************/
 void SDL_Arduino_SX1502::begin() {
-  Wire.begin();
+  //Wire.begin();
 
   //Serial.print("address="); Serial.println(SX1502_i2caddr);
 

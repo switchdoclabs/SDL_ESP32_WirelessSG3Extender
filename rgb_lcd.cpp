@@ -55,7 +55,7 @@ rgb_lcd::rgb_lcd() {
 
 void rgb_lcd::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 
-    Wire.begin();
+    //Wire.begin();
 
     if (lines > 1) {
         _displayfunction |= LCD_2LINE;

@@ -57,7 +57,7 @@ void printSensors();
 void readHydroponicsSensors()
 {
 
-
+/*
   Serial.println("--ReadHydroponicsSensors");
   // Temperature
   if (OneWire_Present)
@@ -82,56 +82,23 @@ void readHydroponicsSensors()
   {
     latestHydroponicsData.temperature = -1;
   }
+
+
   Serial.println("--Before Level - ReadHydroponicsSensors");
   // Level
 
   if (Level_Present)
   {
 
-    xSemaphoreTake( xSemaphoreUseI2C,  portMAX_DELAY);
-    hydroponicsLevelSensor.start();
-
-    latestHydroponicsData.rawLevel = hydroponicsLevelSensor.getDistance();
+    latestHydroponicsData.rawLevel = ultrasoniclevel.MeasureInMillimeters();
 
     Serial.print("--------------------------------------------------------->raw_distance=");
     Serial.println(latestHydroponicsData.rawLevel);
-    xSemaphoreGive( xSemaphoreUseI2C);
   }
   else
   {
     latestHydroponicsData.rawLevel = -1.0;
   }
-  
-
-  // Turbidity
-  Serial.println("--Before Turbidity - ReadHydroponicsSensors");
-
-  if (moistureSensorEnable[1] == 1)
-    writeGPIOBit(1, true);
-  else
-    writeGPIOBit(1, false);
-
-
-
-  vTaskDelay( 1000 / portTICK_PERIOD_MS);
-  // delay with it ont
-  if (moistureSensorEnable[1] == 1)
-  {
-    xSemaphoreTake( xSemaphoreUseI2C,  portMAX_DELAY);
-    unsigned int rawValue;
-
-    rawValue = ads1015.readADC_SingleEnded(1);
-
-    latestHydroponicsData.rawTurbidity = rawValue;
-    Serial.print("--------------------------------------------------------->raw_turbidity=");
-    Serial.println(rawValue);
-
-    xSemaphoreGive( xSemaphoreUseI2C);
-  }
-  else
-    latestHydroponicsData.rawTurbidity = -1;
-
-  writeGPIOBit(1, false);
 
 
 
@@ -144,7 +111,7 @@ void readHydroponicsSensors()
   else
     writeGPIOBit(0, false);
 
-
+  vTaskDelay( 1000 / portTICK_PERIOD_MS);
 
   if (moistureSensorEnable[0] == 1)
   {
@@ -165,12 +132,102 @@ void readHydroponicsSensors()
   writeGPIOBit(0, false);
 
 
+  // Turbidity
+  Serial.println("--Before Turbidity - ReadHydroponicsSensors");
+
+  if (moistureSensorEnable[1] == 1)
+    writeGPIOBit(1, true);
+  else
+    writeGPIOBit(1, false);
+
+
+
+  vTaskDelay( 1000 / portTICK_PERIOD_MS);
+  // delay with it on
+  if (moistureSensorEnable[1] == 1)
+  {
+    xSemaphoreTake( xSemaphoreUseI2C,  portMAX_DELAY);
+    unsigned int rawValue;
+
+    rawValue = ads1015.readADC_SingleEnded(1);
+
+    latestHydroponicsData.rawTurbidity = rawValue;
+    Serial.print("--------------------------------------------------------->raw_turbidity=");
+    Serial.println(rawValue);
+
+    xSemaphoreGive( xSemaphoreUseI2C);
+  }
+  else
+    latestHydroponicsData.rawTurbidity = -1;
+
+  writeGPIOBit(1, false);
+
+
+
+  // Ph sensor
+
+  Serial.println("--Before Ph - ReadHydroponicsSensors");
+  if (moistureSensorEnable[2] == 1)
+    writeGPIOBit(2, true);
+  else
+    writeGPIOBit(2, false);
+
+  vTaskDelay( 1000 / portTICK_PERIOD_MS);
+
+  if (moistureSensorEnable[2] == 1)
+  {
+    xSemaphoreTake( xSemaphoreUseI2C,  portMAX_DELAY);
+    unsigned int rawValue;
+
+    rawValue = ads1015.readADC_SingleEnded(2);
+
+    latestHydroponicsData.rawPh = rawValue;
+    Serial.print("--------------------------------------------------------->raw_Ph=");
+    Serial.println(rawValue);
+
+    xSemaphoreGive( xSemaphoreUseI2C);
+  }
+  else
+    latestHydroponicsData.rawPh = -1;
+
+  writeGPIOBit(2, false);
+  */
+
+  // Port 4 moisture sensor
+
+  Serial.println("--Before Port 4 Moisture Sensor - ReadHydroponicsSensors");
+  if (moistureSensorEnable[3] == 1)
+    writeGPIOBit(3, true);
+  else
+    writeGPIOBit(3, false);
+
+  if (moistureSensorEnable[3] == 1)
+  {
+    xSemaphoreTake( xSemaphoreUseI2C,  portMAX_DELAY);
+    unsigned int rawValue;
+
+    rawValue = ads1015.readADC_SingleEnded(3);
+
+    moistureSensorsRaw[3] = rawValue;
+    Serial.print("--------------------------------------------------------->raw_Moisture4=");
+    Serial.println(rawValue);
+
+    xSemaphoreGive( xSemaphoreUseI2C);
+  }
+  else
+    moistureSensorsRaw[3] = -1;
+
+     vTaskDelay( 1000 / portTICK_PERIOD_MS);
+
+  writeGPIOBit(3, false);
+
   Serial.println("--End of ReadHydroponicsSensors");
 
 }
 void readHydroponicsLevelSensor()
 {
 
+  latestHydroponicsData.rawLevel = ultrasoniclevel.MeasureInMillimeters();
 
 }
 
@@ -255,6 +312,7 @@ void ReadAMG8833Sensor()
 {
   /*Read temp*/
   amg8833.read_pixel_temperature(AMG8833_temp  );
+
   /*Print 8X8 pixels value.*/
   Serial.println("Temperature for 8X8 matrix are::");
   for (int i = 0; i < PIXEL_NUM; i++) {

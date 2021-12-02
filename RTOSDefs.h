@@ -7,6 +7,9 @@
 
 SemaphoreHandle_t  xSemaphoreReadSensor;
 
+SemaphoreHandle_t  xSemaphoreHydroponicsReadSensor;
+
+SemaphoreHandle_t  xSemaphoreHydroponicsLevelReadSensor;
 SemaphoreHandle_t  xSemaphoreRESTCommand;
 
 SemaphoreHandle_t  xSemaphoreSensorsBeingRead;
@@ -26,3 +29,5 @@ SemaphoreHandle_t  xSemaphoreUpdatingBluetooth;
 SemaphoreHandle_t  xSemaphoreReadBluetooth;
 
 SemaphoreHandle_t  xSemaphoreReadInfrared;
+
+SemaphoreHandle_t  xSemaphoreKeepMQTTAlive;

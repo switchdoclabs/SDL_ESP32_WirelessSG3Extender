@@ -157,18 +157,29 @@ int assignBluetoothSensors(String command) {
 
 
     String splitValue;
+    // wipe all
+    for (int j = 0; j < MAXBLUETOOTHDEVICES; j++)
+    {
+      BluetoothAddresses[j] = "";
+    }
     for (i = 0; i < MAXBLUETOOTHDEVICES; i++)
     {
       splitValue = getValue(command, ',', i + 1);
-      if (splitValue.length() > 0)
+      if (splitValue == "NONE")
       {
-        BluetoothAddresses[i] = splitValue;
+        // no bluetooth addresses
+        Serial.println("No Bluetooth Addresses Added");
+
       }
       else
-      {
-        break;
-      }
+
+        if (splitValue.length() > 0)
+        {
+          BluetoothAddresses[i] = splitValue;
+        }
+
     }
+
 
     for (i = 0; i < MAXBLUETOOTHDEVICES; i++)
     {
@@ -216,8 +227,10 @@ int enableHydroponicsMode(String command) {
       HydroponicsMode = getValue(command, ',', 1).toInt();
     }
     if (getValue(command, ',', 2) != "")
+    {
       HydroponicsLevelMode = getValue(command, ',', 2).toInt();
-
+      xSemaphoreGive( xSemaphoreHydroponicsReadSensor); // start hyrdoponics reading
+    }
     writePreferences();
     return 0;
 

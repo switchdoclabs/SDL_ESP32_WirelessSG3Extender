@@ -23,7 +23,7 @@ void taskFetchInfrared( void * parameter)
 
       ReadAMG8833Sensor();
 
-      
+
       sendMQTT(MQTTINFRARED, "");
       xSemaphoreGive( xSemaphoreUseI2C);
 
@@ -42,9 +42,12 @@ void taskSendSensors( void * parameter)
 
     if (uxSemaphoreGetCount( xSemaphoreReadSensor ) > 0)
     {
-      xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
-      sendMQTT(MQTTSENSORS, "");
-      xSemaphoreGive( xSemaphoreSensorsBeingRead);
+      if (HydroponicsMode == 0)
+      {
+        xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
+        sendMQTT(MQTTSENSORS, "");
+        xSemaphoreGive( xSemaphoreSensorsBeingRead);
+      }
 
     }
     //vTaskDelay(600000 / portTICK_PERIOD_MS);
@@ -58,17 +61,17 @@ void taskReadSendHydroponics( void * parameter)
   // Enter RTOS Task Loop
   for (;;)  {
 
-    if (uxSemaphoreGetCount( xSemaphoreReadSensor ) > 0)
+    if (uxSemaphoreGetCount( xSemaphoreHydroponicsReadSensor ) > 0)
     {
 
-        if (HydroponicsMode == 1)
-        {
+      if (HydroponicsMode == 1)
+      {
         xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
         readHydroponicsSensors();
         sendMQTT(MQTTHYDROPONICS, "");
         xSemaphoreGive( xSemaphoreSensorsBeingRead);
-        }
- 
+      }
+
     }
 
     //vTaskDelay(600000 / portTICK_PERIOD_MS);
@@ -82,7 +85,7 @@ void taskReadSendHydroponicsLevel( void * parameter)
   // Enter RTOS Task Loop
   for (;;)  {
 
-    if (uxSemaphoreGetCount( xSemaphoreReadSensor ) > 0)
+    if (uxSemaphoreGetCount( xSemaphoreHydroponicsLevelReadSensor ) > 0)
     {
       if (HydroponicsLevelMode == 1)
       {
@@ -104,10 +107,13 @@ void taskReadSensors( void * parameter)
   for (;;)  {
 
     if (uxSemaphoreGetCount( xSemaphoreReadSensor ) > 0)
-    {
-      xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
-      readSensors();
-      xSemaphoreGive( xSemaphoreSensorsBeingRead);
+    { 
+      if (HydroponicsMode == 0)
+      {
+        xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
+        readSensors();
+        xSemaphoreGive( xSemaphoreSensorsBeingRead);
+      }
 
     }
     //vTaskDelay(15*60*60 / portTICK_PERIOD_MS);
@@ -308,4 +314,37 @@ void taskMainLCDLoopDisplay(void * parameter)
 
     vTaskDelay(2000 / portTICK_PERIOD_MS);
   }
+}
+
+
+
+
+
+
+void taskKeepMQTTAlive( void * parameter)
+{
+  // Enter RTOS Task Loop
+  for (;;)  {
+
+    if (uxSemaphoreGetCount( xSemaphoreKeepMQTTAlive ) > 0)
+    {
+
+      if (!MQTTclient.connected()) {
+        MQTTreconnect(true);
+        Serial.println("Task MQTT reconnected");
+      }
+
+      MQTTclient.loop();
+
+
+
+    }
+    else
+    {
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+
+
+  }
+
 }
