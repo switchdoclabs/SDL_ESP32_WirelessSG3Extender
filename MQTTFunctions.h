@@ -256,8 +256,7 @@ int sendMQTT(int messageType, String argument)
         AddString += "\", \"rawph\": \"";
         AddString += String(latestHydroponicsData.rawPh) ;
 
-        AddString += "\", \"rawmoisture4\": \"";
-        AddString += String(moistureSensorsRaw[3]) ;
+
 
 
         String sensortypes;

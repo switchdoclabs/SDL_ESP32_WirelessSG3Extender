@@ -8,7 +8,7 @@
 
 
 
-#define SGSEXTENDERESP32VERSION "044"
+#define SGSEXTENDERESP32VERSION "045"
 
 
 #define CONTROLLERBOARD "V1"
@@ -715,6 +715,7 @@ void restartMQTT()
 
 bool checkForLevelSensor()
 {
+  /*
   long RangeInMillimeters;
   RangeInMillimeters = ultrasoniclevel.MeasureInMillimeters();
   if (RangeInMillimeters > 0)
@@ -726,7 +727,8 @@ bool checkForLevelSensor()
   {
     Serial.println("Ultrasonic Level NOT Found");
   }
-  return false;
+  */
+  return true;
 }
 
 void setup()
@@ -749,7 +751,7 @@ void setup()
   startupSetupGPIOBits();
   Serial.println();
   Serial.println("##############################");
-  Serial.println("SmartGardenSystem2 Wireless Extender");
+  Serial.println("SmartGarden3 Wireless Extender");
   Serial.println("##############################");
   Serial.print("Software Version = ");
   Serial.println(SGSEXTENDERESP32VERSION);
@@ -1198,12 +1200,7 @@ void setup()
 
   // REMOVE!
 
-  while (1)
-  {
-    readHydroponicsSensors();
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-
-  }
+ 
 
   if (AMG8833_Present == true)
   {

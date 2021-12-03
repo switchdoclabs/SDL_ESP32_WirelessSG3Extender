@@ -57,7 +57,7 @@ void printSensors();
 void readHydroponicsSensors()
 {
 
-/*
+
   Serial.println("--ReadHydroponicsSensors");
   // Temperature
   if (OneWire_Present)
@@ -83,24 +83,24 @@ void readHydroponicsSensors()
     latestHydroponicsData.temperature = -1;
   }
 
+  /*
+    Serial.println("--Before Level - ReadHydroponicsSensors");
+    // Level
 
-  Serial.println("--Before Level - ReadHydroponicsSensors");
-  // Level
+    if (Level_Present)
+    {
 
-  if (Level_Present)
-  {
+      latestHydroponicsData.rawLevel = ultrasoniclevel.MeasureInMillimeters();
 
-    latestHydroponicsData.rawLevel = ultrasoniclevel.MeasureInMillimeters();
+      Serial.print("--------------------------------------------------------->raw_distance=");
+      Serial.println(latestHydroponicsData.rawLevel);
+    }
+    else
+    {
+      latestHydroponicsData.rawLevel = -1.0;
+    }
 
-    Serial.print("--------------------------------------------------------->raw_distance=");
-    Serial.println(latestHydroponicsData.rawLevel);
-  }
-  else
-  {
-    latestHydroponicsData.rawLevel = -1.0;
-  }
-
-
+  */
 
 
   // TDS
@@ -191,33 +191,34 @@ void readHydroponicsSensors()
     latestHydroponicsData.rawPh = -1;
 
   writeGPIOBit(2, false);
-  */
 
-  // Port 4 moisture sensor
 
-  Serial.println("--Before Port 4 Moisture Sensor - ReadHydroponicsSensors");
-  if (moistureSensorEnable[3] == 1)
-    writeGPIOBit(3, true);
-  else
-    writeGPIOBit(3, false);
-
-  if (moistureSensorEnable[3] == 1)
+  // Port 4 capacitive level sensor
+  if (Level_Present)
   {
+    Serial.println("--Before Port 4 cap level Moisture Sensor - ReadHydroponicsSensors");
+
+    writeGPIOBit(3, true);
+
+
+    vTaskDelay( 1000 / portTICK_PERIOD_MS);
     xSemaphoreTake( xSemaphoreUseI2C,  portMAX_DELAY);
     unsigned int rawValue;
 
     rawValue = ads1015.readADC_SingleEnded(3);
 
-    moistureSensorsRaw[3] = rawValue;
-    Serial.print("--------------------------------------------------------->raw_Moisture4=");
+    Serial.print("--------------------------------------------------------->raw_Cap level4=");
     Serial.println(rawValue);
+    latestHydroponicsData.rawLevel = rawValue;
 
     xSemaphoreGive( xSemaphoreUseI2C);
+
   }
   else
-    moistureSensorsRaw[3] = -1;
 
-     vTaskDelay( 1000 / portTICK_PERIOD_MS);
+    latestHydroponicsData.rawLevel = -1.0;
+
+
 
   writeGPIOBit(3, false);
 
