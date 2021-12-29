@@ -53,6 +53,10 @@ int checkForID(String command) {
   RESTreturnString += SGSEXTENDERESP32VERSION;
 
 
+    MQTTclient.setServer(MQTT_IP.c_str(), MQTT_PORT);
+    MQTTclient.setCallback(MQTTcallback);
+    //blinkIPAddress();
+    MQTTreconnect(false);
   return 0;
 
 }
@@ -72,7 +76,7 @@ int restartMQTT(String command) {
     MQTTclient.setServer(MQTT_IP.c_str(), MQTT_PORT);
     MQTTclient.setCallback(MQTTcallback);
     //blinkIPAddress();
-    MQTTreconnect(true);
+    MQTTreconnect(false);
 
 
   }
@@ -196,6 +200,22 @@ int assignBluetoothSensors(String command) {
     writePreferences();
   }
 
+    bluetoothDeviceCount = countBluetoothSensors();
+
+  Serial.print("countBlueToothSensors=");
+  Serial.println(bluetoothDeviceCount);
+  if (bluetoothDeviceCount > 0)
+  { // Startup Task
+    Serial.println("Starting up Bluetooth");
+
+    Serial.println("Initialize BLE client...");
+    BLEDevice::init("");
+    BLEDevice::setPower(ESP_PWR_LVL_P7);
+    if (uxSemaphoreGetCount( xSemaphoreReadBluetooth ) == 0)
+      xSemaphoreGive( xSemaphoreReadBluetooth);
+
+  }
+
   return 1;
 
 }
@@ -241,37 +261,12 @@ int enableHydroponicsMode(String command) {
 
 // Water Commands
 
-int enableMoistureSensors(String command) {
 
-  // admin password, enableMoisture0, enableMoisture1, ....
-  RESTreturnString = "";
-  Serial.println("---------->REST: enableMoistureSensors");
-  Serial.print("Command =");
-  Serial.println(command);
-  String password;
-  password = getValue(command, ',', 0);
-  if (password == adminPassword)
-  {
 
-    int i;
-    for (i = 0; i < 4; i++)
-    {
+int readHydroponicsSensorsCommand(String command) {
+  // admin password, returns 4 ADC sensors
 
-      if (getValue(command, ',', i + 1) != "")
-        moistureSensorEnable[i] = getValue(command, ',', i + 1).toInt();
-
-    }
-    return 0;
-
-  }
-  return 1;
-
-}
-
-int readMoistureSensors(String command) {
-  // admin password, returns 4 moisture sensors
-
-  // command format:     adminpassworde
+  // command format:     admin, password
   RESTreturnString = "";
   Serial.println("---------->REST: readMoistureSensors");
   Serial.print("Command =");
@@ -280,20 +275,17 @@ int readMoistureSensors(String command) {
   password = getValue(command, ',', 0);
   if (password == adminPassword)
   {
-    xSemaphoreTake( xSemaphoreSensorsBeingRead, 30000);
+
     int i;
 
-    readSensors();
-    for (i = 0; i < 4; i++)
-    {
-      RESTreturnString += String(moistureSensorEnable[i]) + ",";
-      RESTreturnString += String(moistureSensors[i]) + ",";
-      RESTreturnString += String(moistureSensorsRaw[i]) + ",";
-    }
-    String mySensorType = "C1,C1,C1,C1";
-    RESTreturnString += mySensorType + ",";
-    RESTreturnString = RESTreturnString.substring(0, RESTreturnString.length() - 1);
+    xSemaphoreTake( xSemaphoreSensorsBeingRead, 30000);
+    readHydroponicsSensors();
+    sendMQTT(MQTTHYDROPONICS, "");
     xSemaphoreGive( xSemaphoreSensorsBeingRead);
+    String mySensorType = "C1,C1,C1,C1";
+    RESTreturnString = mySensorType + ",";
+    RESTreturnString = RESTreturnString.substring(0, RESTreturnString.length() - 1);
+
     return 0;
   }
   return 1;
@@ -508,6 +500,19 @@ int setSensorCycle(String command)
     else
     {
       sensorCycle = newSensorCycle;
+      
+      bluetoothPeriod = (unsigned long)sensorCycle * 1000l;
+      hydroponicsSensorPeriod = (unsigned long)sensorCycle * 1000l;
+      infraredPeriod = (unsigned long)sensorCycle * 1000l;
+      valveCheckPeriod = 100l;
+
+      unsigned long temp;
+      temp = millis() - 10l;
+      time_now_1 = temp - bluetoothPeriod;  // so will execute at start
+      time_now_2 = temp - hydroponicsSensorPeriod;
+      time_now_3 = temp - infraredPeriod;
+      time_now_4 = temp - valveCheckPeriod;
+      
     }
 
     writePreferences();
@@ -583,7 +588,7 @@ int updateSGS(String command)
   Serial.println(command);
   RESTreturnString = "";
   // grab the semaphore to stop reading and display
-  xSemaphoreTake( xSemaphoreReadSensor, 60);
+  //xSemaphoreTake( xSemaphoreReadSensor, 60);
 
   String newFWVersion = "XX";
 

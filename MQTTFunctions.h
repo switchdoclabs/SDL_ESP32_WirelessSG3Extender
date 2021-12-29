@@ -9,7 +9,7 @@ int sendMQTTBlueTooth(String MacAddress, int temperature, int moisture, int brig
 
 
   if (!MQTTclient.connected()) {
-    MQTTreconnect(true);
+    MQTTreconnect(false);
     Serial.println("reconnected");
   }
   else
@@ -136,7 +136,7 @@ int sendMQTT(int messageType, String argument)
   String SendString;
 
   if (!MQTTclient.connected()) {
-    MQTTreconnect(true);
+    MQTTreconnect(false);
   }
   MQTTclient.loop();
 
@@ -316,59 +316,7 @@ int sendMQTT(int messageType, String argument)
 
       }
 
-    case MQTTSENSORS:
-      {
-
-        AddString = "\"id\": \"";
-        AddString += myID;
-        AddString += "\", \"messagetype\": \"";
-        AddString += messageType;
-        AddString += "\", \"timestamp\": \"";
-        AddString += myTime;
-        AddString += "\", \"enableSensors\": \"";
-
-        int i;
-        for (i = 0; i < 4; i++)
-        {
-
-          AddString += String(moistureSensorEnable[i]) + ",";
-
-        }
-        AddString += "\", \"sensorValues\": \"";
-        for (i = 0; i < 4; i++)
-        {
-          if (moistureSensorEnable[i] == 0)
-            AddString += String(-1) + ",";
-          else
-            AddString += String(moistureSensors[i]) + ",";
-
-        }
-
-        AddString += "\", \"rawSensorValues\": \"";
-        for (i = 0; i < 4; i++)
-        {
-          if (moistureSensorEnable[i] == 0)
-            AddString += String(-1) + ",";
-          else
-            AddString += String(moistureSensorsRaw[i]) + ",";
-
-        }
-        AddString += "\", \"sensorType\": \"";
-        String mySensorType = "";
-        for (i = 0; i < 4; i++)
-        {
-          mySensorType += moistureSensorType[i];
-          if (i < 3)
-            mySensorType += ",";
-        }
-        AddString += mySensorType + "\"";
-
-
-        SendString = "{" + AddString +  "}"; //Send the request
-
-
-        break;
-      }
+  
 
 
 

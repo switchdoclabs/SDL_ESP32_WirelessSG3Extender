@@ -201,7 +201,7 @@ void updateDisplay(int displayMode)
         sprintf(buffer, "SVS: %1i%1i%1i%1i%1i%1i%1i%1i", valveState[0], valveState[1], valveState[2], valveState[3], valveState[4], valveState[5], valveState[6], valveState[7]);
         setDisplayLineLCD(0, buffer);
         buffer[0] = '\0';
-        sprintf(buffer, "MSE: %1i%1i%1i%1i", moistureSensorEnable[0], moistureSensorEnable[1], moistureSensorEnable[2], moistureSensorEnable[3]);
+        sprintf(buffer, "%s", stationName.c_str());
         setDisplayLineLCD(1, buffer);
         break;
 
@@ -218,22 +218,16 @@ void updateDisplay(int displayMode)
         sprintf(buffer, "Sensor %s #%i", moistureSensorType[unit], unit + 1);
         setDisplayLineLCD(0, buffer);
         buffer[0] = '\0';
-        if (moistureSensorType[unit] == "C1")
-        {
-          sprintf(buffer, "%3.1f%% Raw:%d", moistureSensors[unit], moistureSensorsRaw[unit]);
-        }
-        else
-        {
-          if (moistureSensorType[unit] == "TUR1")
-            sprintf(buffer, "Raw:%d", latestHydroponicsData.rawTurbidity);
-          else if (moistureSensorType[unit] == "TDS1")
-            sprintf(buffer, "Raw:%d", latestHydroponicsData.rawTDS);
-         else if (moistureSensorType[unit] == "PH1")
-            sprintf(buffer, "Raw:%d", latestHydroponicsData.rawPh);
-          else
-            sprintf(buffer, "Raw:%d", moistureSensorsRaw[unit]);
 
-        }
+        if (moistureSensorType[unit] == "TUR1")
+          sprintf(buffer, "Raw:%d", latestHydroponicsData.rawTurbidity);
+        else if (moistureSensorType[unit] == "TDS1")
+          sprintf(buffer, "Raw:%d", latestHydroponicsData.rawTDS);
+        else if (moistureSensorType[unit] == "PH1")
+          sprintf(buffer, "Raw:%d", latestHydroponicsData.rawPh);
+        else
+          sprintf(buffer, "Raw:%d", latestHydroponicsData.rawLevel);
+
         setDisplayLineLCD(1, buffer);
 
         break;
@@ -247,6 +241,15 @@ void updateDisplay(int displayMode)
       case DISPLAY_BLUETOOTH+5:
       case DISPLAY_BLUETOOTH+6:
       case DISPLAY_BLUETOOTH+7:
+      case DISPLAY_BLUETOOTH+8:
+      case DISPLAY_BLUETOOTH+9:
+      case DISPLAY_BLUETOOTH+10:
+      case DISPLAY_BLUETOOTH+11:
+      case DISPLAY_BLUETOOTH+12:
+      case DISPLAY_BLUETOOTH+13:
+      case DISPLAY_BLUETOOTH+14:
+      case DISPLAY_BLUETOOTH+15:
+
         {
           unit = displayMode - DISPLAY_BLUETOOTH;
 
@@ -460,6 +463,14 @@ void writeAllDisplayLines(int DisplayMode)
     case DISPLAY_BLUETOOTH+5:
     case DISPLAY_BLUETOOTH+6:
     case DISPLAY_BLUETOOTH+7:
+    case DISPLAY_BLUETOOTH+8:
+    case DISPLAY_BLUETOOTH+9:
+    case DISPLAY_BLUETOOTH+10:
+    case DISPLAY_BLUETOOTH+11:
+    case DISPLAY_BLUETOOTH+12:
+    case DISPLAY_BLUETOOTH+13:
+    case DISPLAY_BLUETOOTH+14:
+    case DISPLAY_BLUETOOTH+15:
       {
         int textSize = 2;
 

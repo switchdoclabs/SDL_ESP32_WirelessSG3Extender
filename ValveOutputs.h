@@ -20,7 +20,8 @@ void setupGPIOBits()
   // run befor semaphore setup
   xSemaphoreTake( xSemaphoreUseI2C, portMAX_DELAY);
   sx1502.writeGPIO(0x00);
-
+  sx1502.wireWriteRegister(SX1502_REGPULLDOWN_ADDR, 0xFF);
+  /*
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO0, SX1502_ON);
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO1, SX1502_ON);
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO2, SX1502_ON);
@@ -29,7 +30,9 @@ void setupGPIOBits()
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO5, SX1502_ON);
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO6, SX1502_ON);
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO7, SX1502_ON);
-
+  */
+  sx1502.wireWriteRegister(SX1502_REGDIR_ADDR, 0x00);
+  /*
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO0, SX1502_OUTPUT);
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO1, SX1502_OUTPUT);
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO2, SX1502_OUTPUT);
@@ -38,7 +41,7 @@ void setupGPIOBits()
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO5, SX1502_OUTPUT);
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO6, SX1502_OUTPUT);
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO7, SX1502_OUTPUT);
-
+*/
 
   xSemaphoreGive( xSemaphoreUseI2C);
 
@@ -55,8 +58,8 @@ void startupSetupGPIOBits()
 
 
   sx1502.writeGPIO(0x00);
-
-
+  sx1502.wireWriteRegister(SX1502_REGPULLDOWN_ADDR, 0xFF);
+  /*
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO0, SX1502_ON);
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO1, SX1502_ON);
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO2, SX1502_ON);
@@ -65,7 +68,9 @@ void startupSetupGPIOBits()
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO5, SX1502_ON);
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO6, SX1502_ON);
   sx1502.setPulldownGPIOChannel(SX1502_REG_IO7, SX1502_ON);
-
+  */
+  sx1502.wireWriteRegister(SX1502_REGDIR_ADDR, 0x00);
+  /*
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO0, SX1502_OUTPUT);
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO1, SX1502_OUTPUT);
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO2, SX1502_OUTPUT);
@@ -74,7 +79,7 @@ void startupSetupGPIOBits()
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO5, SX1502_OUTPUT);
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO6, SX1502_OUTPUT);
   sx1502.setDirectionGPIOChannel(SX1502_REG_IO7, SX1502_OUTPUT);
-
+*/
 
   //xSemaphoreGive( xSemaphoreUseI2C);
 }
@@ -105,7 +110,7 @@ void writeGPIOBit(byte pin, byte value)
 
     for (i = 0; i < 4; i++)
     {
-      if ((moistureSensorEnable[i] == 0) || (valveState[i] == 0))
+      if ( (valveState[i] == 0))
       {
 
 
@@ -163,7 +168,7 @@ void writeGPIOBit(byte pin, byte value)
 
     for (i = 0; i < 4; i++)
     {
-      if ((moistureSensorEnable[i] == 0) || (valveState[i] == 0))
+      if ((valveState[i] == 0))
       {
 
 
@@ -183,7 +188,7 @@ void writeGPIOBit(byte pin, byte value)
       int i;
       for (i = 0; i < 4; i++)
       {
-        temp += String(moistureSensorEnable[i]);
+        temp += "1";
 
       }
       temp += " VS";
@@ -258,8 +263,8 @@ void setupRelays()
 void writeRelay(byte pin, byte value)
 {
 
-  Serial.print("WRxSemaphoreUseI2C=");
-  Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
+  //Serial.print("WRxSemaphoreUseI2C=");
+  //Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
   xSemaphoreTake( xSemaphoreUseI2C, portMAX_DELAY);
 
 
@@ -404,8 +409,8 @@ void turnOnAppropriateValves()
 
   xSemaphoreGive( xSemaphoreUseI2C);
 
-  Serial.print("ABWriteGPIOxSemaphoreUseI2C=");
-  Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
+  //Serial.print("ABWriteGPIOxSemaphoreUseI2C=");
+  //Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
   for (i = 4; i < 8; i++)
   {
     if (valveState[i] == 1)

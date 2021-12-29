@@ -3,6 +3,26 @@
 //
 
 
+void evaluateValves(int timeDecrementMS);
+
+
+void DoEvaluateValves()
+{
+
+ if (uxSemaphoreGetCount( xSemaphoreEvaluateValves ) > 0)
+    {
+      xSemaphoreTake( xSemaphoreEvaluatingValves, 10000);
+      xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
+      evaluateValves(100);
+      xSemaphoreGive( xSemaphoreSensorsBeingRead);
+      xSemaphoreGive( xSemaphoreEvaluatingValves);
+      //vTaskDelay(50 / portTICK_PERIOD_MS);
+
+    }
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  
+}
+
 void evaluateValves(int timeDecrementMS)
 {
   // Loop Around Valves

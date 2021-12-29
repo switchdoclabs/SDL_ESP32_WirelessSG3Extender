@@ -35,27 +35,6 @@ void taskFetchInfrared( void * parameter)
 }
 
 
-void taskSendSensors( void * parameter)
-{
-  // Enter RTOS Task Loop
-  for (;;)  {
-
-    if (uxSemaphoreGetCount( xSemaphoreReadSensor ) > 0)
-    {
-      if (HydroponicsMode == 0)
-      {
-        xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
-        sendMQTT(MQTTSENSORS, "");
-        xSemaphoreGive( xSemaphoreSensorsBeingRead);
-      }
-
-    }
-    //vTaskDelay(600000 / portTICK_PERIOD_MS);
-    vTaskDelay(sensorCycle * 1000 / portTICK_PERIOD_MS);
-  }
-
-}
-
 void taskReadSendHydroponics( void * parameter)
 {
   // Enter RTOS Task Loop
@@ -66,7 +45,7 @@ void taskReadSendHydroponics( void * parameter)
 
       if (HydroponicsMode == 1)
       {
-        xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
+        xSemaphoreTake( xSemaphoreSensorsBeingRead, 20000);
         readHydroponicsSensors();
         sendMQTT(MQTTHYDROPONICS, "");
         xSemaphoreGive( xSemaphoreSensorsBeingRead);
@@ -76,6 +55,7 @@ void taskReadSendHydroponics( void * parameter)
 
     //vTaskDelay(600000 / portTICK_PERIOD_MS);
     vTaskDelay(sensorCycle * 1000 / portTICK_PERIOD_MS);
+    //vTaskDelay(5000 / portTICK_PERIOD_MS);
   }
 
 }
@@ -89,7 +69,7 @@ void taskReadSendHydroponicsLevel( void * parameter)
     {
       if (HydroponicsLevelMode == 1)
       {
-        xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
+        xSemaphoreTake( xSemaphoreSensorsBeingRead, 20000);
         readHydroponicsLevelSensor();
         sendMQTT(MQTTHYDROPONICSLEVEL, "");
         xSemaphoreGive( xSemaphoreSensorsBeingRead);
@@ -101,26 +81,6 @@ void taskReadSendHydroponicsLevel( void * parameter)
 
 }
 
-void taskReadSensors( void * parameter)
-{
-  // Enter RTOS Task Loop
-  for (;;)  {
-
-    if (uxSemaphoreGetCount( xSemaphoreReadSensor ) > 0)
-    { 
-      if (HydroponicsMode == 0)
-      {
-        xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
-        readSensors();
-        xSemaphoreGive( xSemaphoreSensorsBeingRead);
-      }
-
-    }
-    //vTaskDelay(15*60*60 / portTICK_PERIOD_MS);
-    vTaskDelay(sensorCycle * 1000 / portTICK_PERIOD_MS);
-  }
-
-}
 
 
 void taskSetValves( void * parameter)
@@ -130,12 +90,13 @@ void taskSetValves( void * parameter)
 
     if (uxSemaphoreGetCount( xSemaphoreEvaluateValves ) > 0)
     {
-      xSemaphoreTake( xSemaphoreEvaluatingValves, 1000);
-      xSemaphoreTake( xSemaphoreSensorsBeingRead, 1000);
+      xSemaphoreTake( xSemaphoreEvaluatingValves, 10000);
+      xSemaphoreTake( xSemaphoreSensorsBeingRead, 10000);
       evaluateValves(100);
+      xSemaphoreGive( xSemaphoreSensorsBeingRead);
       xSemaphoreGive( xSemaphoreEvaluatingValves);
       //vTaskDelay(50 / portTICK_PERIOD_MS);
-      xSemaphoreGive( xSemaphoreSensorsBeingRead);
+
     }
     vTaskDelay(100 / portTICK_PERIOD_MS);
 
@@ -253,6 +214,7 @@ void taskPixelCommand( void * parameter)
 
 
     xSemaphoreGive( xSemaphorePixelPulse);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
 
   }
 
@@ -279,17 +241,9 @@ void taskMainLCDLoopDisplay(void * parameter)
       updateDisplay(DISPLAY_STATUS);
       vTaskDelay(3000 / portTICK_PERIOD_MS);
 
+
       int i;
-      for (i = 0; i < 4; i++)
-      {
 
-
-        if (moistureSensorEnable[i] == 1) // enabled
-        {
-          updateDisplay(DISPLAY_MOISTURE_1 + i);
-          vTaskDelay(3000 / portTICK_PERIOD_MS);
-        }
-      }
       for (i = 0; i < MAXBLUETOOTHDEVICES; i++)
       {
 
@@ -302,7 +256,17 @@ void taskMainLCDLoopDisplay(void * parameter)
 
       }
 
+      // display ADC sensors
 
+
+      for (i = 0; i < 4; i++)
+      {
+
+
+        updateDisplay(DISPLAY_MOISTURE_1 + i);
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
+
+      }
 
 
 
@@ -330,12 +294,12 @@ void taskKeepMQTTAlive( void * parameter)
     {
 
       if (!MQTTclient.connected()) {
-        MQTTreconnect(true);
+        MQTTreconnect(false);
         Serial.println("Task MQTT reconnected");
       }
 
       MQTTclient.loop();
-
+      vTaskDelay(500 / portTICK_PERIOD_MS);
 
 
     }

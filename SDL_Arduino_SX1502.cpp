@@ -28,18 +28,29 @@
 /**************************************************************************/
 void SDL_Arduino_SX1502::wireWriteRegister (uint8_t reg, uint8_t value)
 {
-  //Serial.print("I2C Addr= 0x");
-  //Serial.println(SX1502_i2caddr,HEX);
-  //Serial.print("WriteAddress=0x");
-  //Serial.print(reg, HEX);
-  //Serial.print(" value=0x");
-  //Serial.println(value, HEX);
+  /*
+  Serial.print("I2C Addr= 0x");
+  Serial.println(SX1502_i2caddr, HEX);
+  Serial.print("WriteAddress=0x");
+  Serial.print(reg, HEX);
+  if (reg == 0x00)
+    Serial.print(" RegData");
+  if (reg == 0x01)
+    Serial.print(" RegDir");
+  if (reg == 0x02)
+    Serial.print(" RegPU");
+  if (reg == 0x03)
+    Serial.print(" RegPD");
+  Serial.print(" value=0x");
+  Serial.println(value, HEX);
+  */
 
   Wire.beginTransmission(SX1502_i2caddr);
 #if ARDUINO >= 100
-
+  delay(100);
   Wire.write(reg);
-  vTaskDelay(100 / portTICK_PERIOD_MS);
+  delay(100);
+  //vTaskDelay(100 / portTICK_PERIOD_MS);
   // Register
 
   // Lower 8-bits
@@ -121,7 +132,7 @@ uint8_t SDL_Arduino_SX1502::readGPIO() {
   uint8_t value;
   wireReadRegister(SX1502_REGDATA_ADDR, &value);
   //Serial.print("GPIO Read Raw=");
-  //Serial.println(value,HEX);
+  //Serial.println(value, HEX);
 
   return value;
 }
@@ -141,7 +152,7 @@ uint8_t SDL_Arduino_SX1502::writeGPIO(uint8_t value) {
 
   //Serial.print("writeGPIO: Value = 0x");
   //Serial.println(value, HEX);
- 
+
   //Serial.print("GPIO Write Raw=");
   //Serial.println(value,HEX);
 

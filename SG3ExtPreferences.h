@@ -78,8 +78,7 @@ void writePreferences()
 
   Serial.print("EnglishOrMetric:");
   Serial.println(EnglishOrMetric);
-  Serial.print("Station Name:");
-  Serial.println(stationName);
+
 
   Serial.print("Admin Password:");
   Serial.println(adminPassword.substring(0, 2) + "******");
@@ -170,8 +169,6 @@ void readPreferences()
 
   Serial.print("EnglishOrMetric:");
   Serial.println(EnglishOrMetric);
-  Serial.print("Station Name:");
-  Serial.println(stationName);
 
   Serial.print("Admin Password:");
   Serial.println(adminPassword.substring(0, 2) + "******");
