@@ -1030,7 +1030,7 @@ void setup()
 
   if (WiFiPresent != true)
   {
-#define APTIMEOUTSECONDS 60
+#define APTIMEOUTSECONDS 300
     updateDisplay(DISPLAY_TRYING_AP);
     WiFiPresent = localAPGetIP(APTIMEOUTSECONDS);
   }

@@ -258,17 +258,18 @@ void taskMainLCDLoopDisplay(void * parameter)
 
       // display ADC sensors
 
-
-      for (i = 0; i < 4; i++)
+      if (HydroponicsMode == 1)
       {
+        for (i = 0; i < 4; i++)
+        {
 
 
-        updateDisplay(DISPLAY_MOISTURE_1 + i);
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
+          updateDisplay(DISPLAY_MOISTURE_1 + i);
+          vTaskDelay(3000 / portTICK_PERIOD_MS);
+
+        }
 
       }
-
-
 
 
       //Serial.println("<-----------OutOfDisplay");

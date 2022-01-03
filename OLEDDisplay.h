@@ -91,7 +91,7 @@ void updateDisplay(int displayMode)
 
 
 
-          setDisplayLineLCD(0,  "Trying WiFi AP");
+          setDisplayLineLCD(0,  "Starting WiFi AP");
           buffer[0] = '\0';
           strcpy(buffer, "192.168.4.1");
           setDisplayLineLCD(1, buffer);
