@@ -53,10 +53,10 @@ int checkForID(String command) {
   RESTreturnString += SGSEXTENDERESP32VERSION;
 
 
-    MQTTclient.setServer(MQTT_IP.c_str(), MQTT_PORT);
-    MQTTclient.setCallback(MQTTcallback);
-    //blinkIPAddress();
-    MQTTreconnect(false);
+  MQTTclient.setServer(MQTT_IP.c_str(), MQTT_PORT);
+  MQTTclient.setCallback(MQTTcallback);
+  //blinkIPAddress();
+  MQTTreconnect(false);
   return 0;
 
 }
@@ -113,6 +113,7 @@ int blinkPixelCommand(String command) {
 
 
 }
+
 
 int checkSystem(String command) {
 
@@ -200,7 +201,7 @@ int assignBluetoothSensors(String command) {
     writePreferences();
   }
 
-    bluetoothDeviceCount = countBluetoothSensors();
+  bluetoothDeviceCount = countBluetoothSensors();
 
   Serial.print("countBlueToothSensors=");
   Serial.println(bluetoothDeviceCount);
@@ -282,7 +283,11 @@ int readHydroponicsSensorsCommand(String command) {
     readHydroponicsSensors();
     sendMQTT(MQTTHYDROPONICS, "");
     xSemaphoreGive( xSemaphoreSensorsBeingRead);
-    String mySensorType = "C1,C1,C1,C1";
+
+    String mySensorType = String( latestHydroponicsData.temperature) + "," + String(latestHydroponicsData.rawTDS) + "," + String(latestHydroponicsData.rawTurbidity) + "," 
+                        + String(latestHydroponicsData.rawPh)+ "," + String(latestHydroponicsData.rawLevel) +",";
+    
+    mySensorType = mySensorType+ "T1," + moistureSensorType[0] + "," + moistureSensorType[1] +"," + moistureSensorType[2]+","+    moistureSensorType[3];
     RESTreturnString = mySensorType + ",";
     RESTreturnString = RESTreturnString.substring(0, RESTreturnString.length() - 1);
 
@@ -500,7 +505,7 @@ int setSensorCycle(String command)
     else
     {
       sensorCycle = newSensorCycle;
-      
+      // Sensor Cycle set
       bluetoothPeriod = (unsigned long)sensorCycle * 1000l;
       hydroponicsSensorPeriod = (unsigned long)sensorCycle * 1000l;
       infraredPeriod = (unsigned long)sensorCycle * 1000l;
@@ -512,7 +517,7 @@ int setSensorCycle(String command)
       time_now_2 = temp - hydroponicsSensorPeriod;
       time_now_3 = temp - infraredPeriod;
       time_now_4 = temp - valveCheckPeriod;
-      
+
     }
 
     writePreferences();

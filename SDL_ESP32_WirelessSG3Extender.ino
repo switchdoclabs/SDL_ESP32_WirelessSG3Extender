@@ -3,7 +3,7 @@
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "047"
+#define SGSEXTENDERESP32VERSION "050"
 
 
 #define CONTROLLERBOARD "V1"
@@ -250,8 +250,8 @@ esp_wps_config_t config = WPS_CONFIG_INIT_DEFAULT(ESP_WPS_MODE);
 
 struct HydroponicsData {
   float temperature = -1000.0;
-  int rawTurbidity = -1;
   int rawTDS = -1;
+  int rawTurbidity = -1;
   int rawLevel = -1;
   int rawPh = -1;
 };
@@ -480,6 +480,7 @@ void MQTTreconnect(bool reboot) {
         writePreferences();
         delay(1000);
 
+        // force divide by zero exception
 
         int j;
 
@@ -1035,9 +1036,22 @@ void setup()
     WiFiPresent = localAPGetIP(APTIMEOUTSECONDS);
   }
 
+  if (WiFiPresent == false)
+  {
+    // reboot and try again (this fixes the WiFi down recovery problem and gives a forever time to use the AP to setup)
+
+    // force divide by zero exception
+
+    int j;
+
+    j = 343 / 0;
+    Serial.print (j);
+  }
+
 
   if (WiFiPresent == true)
   {
+
 
     WiFi_SSID = WiFi.SSID();
     WiFi_psk = WiFi.psk();
@@ -1397,11 +1411,15 @@ void loop() {
     Serial.println(uxTaskPriorityGet(NULL));
   */
 
-  
-  if ((unsigned long)(millis() - time_now_4) > tickPeriod) {
-    time_now_4 = millis();
+
+  if ((unsigned long)(millis() - time_now_5) > tickPeriod) {
+    time_now_5 = millis();
     Serial.print("Tick - ");
     digitalClockDisplay();
+    Serial.println();
+
+    IPAddress myIp2 = WiFi.localIP();
+    Serial.printf("LocalIP=%d.%d.%d.%d\n", myIp2[0], myIp2[1], myIp2[2], myIp2[3]);
 
   }
 
@@ -1430,6 +1448,8 @@ void loop() {
     //Serial.println("valveCheckPeriod");
     DoEvaluateValves();
   }
+
+
 
 
 

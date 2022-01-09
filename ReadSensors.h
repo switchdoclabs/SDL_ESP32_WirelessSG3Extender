@@ -239,7 +239,7 @@ void readHydroponicsSensors()
 
 void readHydroponicsLevelSensor()
 {
-  Serial.println("--Fast Read Leve HydroponicsSensors");
+  Serial.println("--Fast Read Level HydroponicsSensors");
 
   writeGPIOBit(3, true);
 
