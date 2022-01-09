@@ -1416,8 +1416,6 @@ void loop() {
     time_now_5 = millis();
     Serial.print("Tick - ");
     digitalClockDisplay();
-    Serial.println();
-
     IPAddress myIp2 = WiFi.localIP();
     Serial.printf("LocalIP=%d.%d.%d.%d\n", myIp2[0], myIp2[1], myIp2[2], myIp2[3]);
 
