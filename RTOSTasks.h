@@ -296,7 +296,7 @@ void taskKeepMQTTAlive( void * parameter)
 
       if (!MQTTclient.connected()) {
         MQTTreconnect(false);
-        Serial.println("Task MQTT reconnected");
+        Serial.println("Task MQTT Alive reconnected");
       }
 
       MQTTclient.loop();

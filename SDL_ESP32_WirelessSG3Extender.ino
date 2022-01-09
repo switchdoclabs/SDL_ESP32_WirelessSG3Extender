@@ -3,7 +3,7 @@
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "050"
+#define SGSEXTENDERESP32VERSION "051"
 
 
 #define CONTROLLERBOARD "V1"
@@ -471,6 +471,7 @@ void MQTTreconnect(bool reboot) {
     // check for 5 failures and then reboot
     if ((i >= 5) && (reboot == true))
     {
+      Serial.print("Ready to Reboot from fail");
       if (MQTT_IP != "")   // dont reboot if no MQTT IP yet.
       {
         // Force Exception and reboot
@@ -480,12 +481,16 @@ void MQTTreconnect(bool reboot) {
         writePreferences();
         delay(1000);
 
+        // force restart
+
+        ESP.restart();
         // force divide by zero exception
+        /*
+                int j;
 
-        int j;
-
-        j = 343 / 0;
-        Serial.print (j);
+                j = 343 / 0;
+                Serial.print (j);
+        */
       }
     }
   }
@@ -1040,12 +1045,17 @@ void setup()
   {
     // reboot and try again (this fixes the WiFi down recovery problem and gives a forever time to use the AP to setup)
 
+    // force restart
+
+    ESP.restart();
+
     // force divide by zero exception
+    /*
+        int j;
 
-    int j;
-
-    j = 343 / 0;
-    Serial.print (j);
+        j = 343 / 0;
+        Serial.print (j);
+    */
   }
 
 
@@ -1383,7 +1393,7 @@ void setup()
   hydroponicsSensorPeriod = (unsigned long)sensorCycle * 1000l;
   infraredPeriod = (unsigned long)sensorCycle * 1000l;
   valveCheckPeriod = 100l;
-  tickPeriod = 6000l;
+  tickPeriod = 30000l;
 
   unsigned long temp;
   temp = millis() - 10l;

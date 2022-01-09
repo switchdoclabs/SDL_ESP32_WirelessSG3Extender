@@ -9,7 +9,7 @@ int sendMQTTBlueTooth(String MacAddress, int temperature, int moisture, int brig
 
 
   if (!MQTTclient.connected()) {
-    MQTTreconnect(false);
+    MQTTreconnect(true);
     Serial.println("reconnected");
   }
   else
@@ -136,7 +136,7 @@ int sendMQTT(int messageType, String argument)
   String SendString;
 
   if (!MQTTclient.connected()) {
-    MQTTreconnect(false);
+    MQTTreconnect(true);
   }
   MQTTclient.loop();
 
