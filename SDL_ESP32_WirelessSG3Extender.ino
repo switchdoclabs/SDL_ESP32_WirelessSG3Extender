@@ -1,9 +1,9 @@
 // Filename SDL_ESP32_WirelessSG3Extender
-// Started Version 045 December 2021
+// Started Version 052 December 2021
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "051"
+#define SGSEXTENDERESP32VERSION "052"
 
 
 #define CONTROLLERBOARD "V1"
@@ -468,6 +468,7 @@ void MQTTreconnect(bool reboot) {
     Serial.print(">>>>>>>>>>>>>>>>>>>>>>>>>>>6.5  ");
     Serial.println(ESP.getFreeHeap());
 #endif
+
     // check for 5 failures and then reboot
     if ((i >= 5) && (reboot == true))
     {
@@ -492,6 +493,13 @@ void MQTTreconnect(bool reboot) {
                 Serial.print (j);
         */
       }
+      else
+      {
+        // force restart
+
+        ESP.restart();
+      }
+      
     }
   }
 }
@@ -770,7 +778,7 @@ void setup()
 
   // Init Bluetooth Addresses
 
-
+ 
 
   pinMode(15, INPUT);
 

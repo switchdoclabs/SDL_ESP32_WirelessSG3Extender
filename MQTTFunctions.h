@@ -221,6 +221,11 @@ int sendMQTT(int messageType, String argument)
         AddString += messageType;
         AddString += "\", \"timestamp\": \"";
         AddString += myTime;
+        AddString += "\", \"ipaddress\": \"";
+        IPAddress myIp2 = WiFi.localIP();
+        sprintf(buffer, "%d.%d.%d.%d", myIp2[0], myIp2[1], myIp2[2], myIp2[3]);
+        String myBuffer = String(buffer);
+        AddString += myBuffer;
         AddString += "\", \"value\": \"";
         AddString += argument;
 
@@ -316,7 +321,7 @@ int sendMQTT(int messageType, String argument)
 
       }
 
-  
+
 
 
 
