@@ -3,7 +3,7 @@
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "052"
+#define SGSEXTENDERESP32VERSION "053"
 
 
 #define CONTROLLERBOARD "V1"
@@ -478,26 +478,25 @@ void MQTTreconnect(bool reboot) {
         // Force Exception and reboot
 
         // wipe MQTT_IP out (mistake or reboot)
-        MQTT_IP = "";
-        writePreferences();
+        //MQTT_IP = "";
+        //writePreferences();
         delay(1000);
 
         // force restart
 
         ESP.restart();
         // force divide by zero exception
-        /*
+        
                 int j;
 
                 j = 343 / 0;
                 Serial.print (j);
-        */
+        
       }
       else
       {
-        // force restart
+        // not force restart
 
-        ESP.restart();
       }
       
     }
