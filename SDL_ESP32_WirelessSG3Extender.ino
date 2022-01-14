@@ -1236,18 +1236,7 @@ void setup()
   Serial.print("CPU1 reset reason: ");
   print_reset_reason(rtc_get_reset_reason(1));
 
-  // send debug boot up MQTT message
-#ifdef EXTDEBUG
-  String myMQTTMessage;
-  myMQTTMessage = SGSEXTENDERESP32VERSION;
-  myMQTTMessage += ", reboot, CPU0 reset reason: ";
-  myMQTTMessage +=  String(return_reset_reason(rtc_get_reset_reason(0)));
-  myMQTTMessage += ", reboot, CPU1 reset reason: ";
-  myMQTTMessage +=  String( return_reset_reason(rtc_get_reset_reason(1)));
 
-
-  sendMQTT(MQTTREBOOT, myMQTTMessage);
-#endif
 
   if (LCD_Present) {
 
@@ -1421,6 +1410,19 @@ void setup()
   }
   Serial.print("MQTT_IP Found=");
   Serial.println(MQTT_IP);
+
+    // send debug boot up MQTT message
+#ifdef EXTDEBUG
+  String myMQTTMessage;
+  myMQTTMessage = SGSEXTENDERESP32VERSION;
+  myMQTTMessage += ", reboot, CPU0 reset reason: ";
+  myMQTTMessage +=  String(return_reset_reason(rtc_get_reset_reason(0)));
+  myMQTTMessage += ", reboot, CPU1 reset reason: ";
+  myMQTTMessage +=  String( return_reset_reason(rtc_get_reset_reason(1)));
+
+
+  sendMQTT(MQTTREBOOT, myMQTTMessage);
+#endif
 
 } //end setup
 
