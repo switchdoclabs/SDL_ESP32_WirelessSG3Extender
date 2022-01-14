@@ -1017,7 +1017,9 @@ class aREST {
           //
           // }
 
-        } else {
+        } 
+        else 
+        {
           Serial.print(F("failed, rc="));
           Serial.print(client.state());
           Serial.println(F(" try again in 5 seconds"));

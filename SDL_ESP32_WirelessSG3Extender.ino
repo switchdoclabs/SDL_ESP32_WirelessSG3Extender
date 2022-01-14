@@ -3,7 +3,7 @@
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "053"
+#define SGSEXTENDERESP32VERSION "054"
 
 
 #define CONTROLLERBOARD "V1"
@@ -486,19 +486,19 @@ void MQTTreconnect(bool reboot) {
 
         ESP.restart();
         // force divide by zero exception
-        
-                int j;
 
-                j = 343 / 0;
-                Serial.print (j);
-        
+        int j;
+
+        j = 343 / 0;
+        Serial.print (j);
+
       }
       else
       {
         // not force restart
 
       }
-      
+
     }
   }
 }
@@ -777,7 +777,7 @@ void setup()
 
   // Init Bluetooth Addresses
 
- 
+
 
   pinMode(15, INPUT);
 
@@ -1411,6 +1411,17 @@ void setup()
   time_now_5 = temp - tickPeriod;
 
   Serial.println("Main Thread Task Start");
+
+
+  while (MQTT_IP == "")
+  {
+    // wait for MQTT_IP forever!  Can't function without it.
+    // comes in on REST
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
+  Serial.print("MQTT_IP Found=");
+  Serial.println(MQTT_IP);
+
 } //end setup
 
 
