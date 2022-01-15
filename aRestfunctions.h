@@ -115,6 +115,41 @@ int blinkPixelCommand(String command) {
 }
 
 
+
+int rebootExtender(String command) {
+
+
+  RESTreturnString = "";
+  Serial.println("---------->REST: rebootExtender");
+  Serial.print("Command =");
+  Serial.println(command);
+  String password;
+  password = getValue(command, ',', 0);
+  if (password == adminPassword)
+  {
+
+
+    ESP.restart();
+    // force divide by zero exception
+
+    int j;
+
+    j = 343 / 0;
+    Serial.print (j);
+
+
+
+    return 0;
+
+  }
+  return 1;
+
+
+
+
+}
+
+
 int checkSystem(String command) {
 
 
@@ -284,10 +319,10 @@ int readHydroponicsSensorsCommand(String command) {
     sendMQTT(MQTTHYDROPONICS, "");
     xSemaphoreGive( xSemaphoreSensorsBeingRead);
 
-    String mySensorType = String( latestHydroponicsData.temperature) + "," + String(latestHydroponicsData.rawTDS) + "," + String(latestHydroponicsData.rawTurbidity) + "," 
-                        + String(latestHydroponicsData.rawPh)+ "," + String(latestHydroponicsData.rawLevel) +",";
-    
-    mySensorType = mySensorType+ "T1," + moistureSensorType[0] + "," + moistureSensorType[1] +"," + moistureSensorType[2]+","+    moistureSensorType[3];
+    String mySensorType = String( latestHydroponicsData.temperature) + "," + String(latestHydroponicsData.rawTDS) + "," + String(latestHydroponicsData.rawTurbidity) + ","
+                          + String(latestHydroponicsData.rawPh) + "," + String(latestHydroponicsData.rawLevel) + ",";
+
+    mySensorType = mySensorType + "T1," + moistureSensorType[0] + "," + moistureSensorType[1] + "," + moistureSensorType[2] + "," +    moistureSensorType[3];
     RESTreturnString = mySensorType + ",";
     RESTreturnString = RESTreturnString.substring(0, RESTreturnString.length() - 1);
 
@@ -679,7 +714,7 @@ int updateSGS(String command)
 
 
   }
-  xSemaphoreGive( xSemaphorePixelPulse); //Restart the flashing
+  xSemaphoreGive( xSemaphorePixelPulse); // the flashing
   xSemaphoreGive( xSemaphoreRESTCommand);
   return 0;
 

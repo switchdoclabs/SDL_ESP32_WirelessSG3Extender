@@ -1224,6 +1224,7 @@ void setup()
   rest.function("restartMQTT", restartMQTT);
   rest.function("assignBluetoothSensors", assignBluetoothSensors);
   rest.function("enableHydroponicsMode", enableHydroponicsMode);
+    rest.function("rebootExtender", rebootExtender);
 
   rest.function("updateSGS", updateSGS);
 
