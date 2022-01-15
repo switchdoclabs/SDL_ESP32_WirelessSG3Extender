@@ -3,7 +3,7 @@
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "055"
+#define SGSEXTENDERESP32VERSION "057"
 
 
 #define CONTROLLERBOARD "V1"
@@ -1309,13 +1309,13 @@ void setup()
 
   // Now we have to wait until we have a MQTT Number
 
-  MQTT_IP = "";
-  updateDisplay(DISPLAY_WAITMQTTIP);
+
+
   while (MQTT_IP == "")
   {
     vTaskDelay(2000 / portTICK_PERIOD_MS);
     Serial.println("Waiting for MQTT IP");
-
+    updateDisplay(DISPLAY_WAITMQTTIP);
   }
 
   xTaskCreatePinnedToCore(
