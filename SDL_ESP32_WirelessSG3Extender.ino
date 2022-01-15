@@ -3,7 +3,7 @@
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "054"
+#define SGSEXTENDERESP32VERSION "055"
 
 
 #define CONTROLLERBOARD "V1"
@@ -112,7 +112,11 @@ __asm volatile ("nop");
 #define DISPLAY_IPNAMEID 30
 #define DISPLAY_BLUETOOTH 31
 
+
 // Next display count would be DISPLAY_BLUETOOTH + MAXBLUETOOTHDEVICES (currently 16, so next display would be 47)
+#define DISPLAY_WAITMQTTIP 50
+
+
 
 #define NUMFLAKES 10
 #define XPOS 0
@@ -1286,6 +1290,9 @@ void setup()
   //Serial.print("Pre taskREST SetupxSemaphoreUseI2C=");
   //Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
 
+
+
+
   xTaskCreatePinnedToCore(
     taskRESTCommand,          /* Task function. */
     "TaskRESTCommand",        /* String with name of task. */
@@ -1296,6 +1303,30 @@ void setup()
     0);               // Specific Core
   //Serial.print("Pre taskSetValues SetupxSemaphoreUseI2C=");
   // Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
+
+
+
+
+  // Now we have to wait until we have a MQTT Number
+
+  MQTT_IP = "";
+  updateDisplay(DISPLAY_WAITMQTTIP);
+  while (MQTT_IP == "")
+  {
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    Serial.println("Waiting for MQTT IP");
+
+  }
+
+  xTaskCreatePinnedToCore(
+    taskMainLCDLoopDisplay,          /* Task function. */
+    "taskMainLCDLoopDisplay",        /* String with name of task. */
+    7000,            /* Stack size in words. */
+    NULL,             /* Parameter passed as input of the task */
+    2,                /* Priority of the task. */
+    NULL,             /* Task handle. */
+    1);               // Specific Core
+
 
   //xTaskCreatePinnedToCore(
   //  taskSetValves,          /* Task function. */
@@ -1328,14 +1359,6 @@ void setup()
   //   0);               // Specific Core
 
 
-  xTaskCreatePinnedToCore(
-    taskMainLCDLoopDisplay,          /* Task function. */
-    "taskMainLCDLoopDisplay",        /* String with name of task. */
-    7000,            /* Stack size in words. */
-    NULL,             /* Parameter passed as input of the task */
-    2,                /* Priority of the task. */
-    NULL,             /* Task handle. */
-    1);               // Specific Core
 
 
   //xTaskCreatePinnedToCore(
@@ -1362,13 +1385,13 @@ void setup()
   //Serial.print("EndSetupxSemaphoreUseI2C=");
   //Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
 
-
   // Start OLED Loop
 
   vTaskDelay(2000 / portTICK_PERIOD_MS);
   //Serial.print("BUpdateSemaphoreUseI2C=");
   //Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
   xSemaphoreGive( xSemaphoreOLEDLoopUpdate);   // initialize it on
+
 
   bluetoothDeviceCount = countBluetoothSensors();
 
@@ -1406,12 +1429,12 @@ void setup()
   {
     // wait for MQTT_IP forever!  Can't function without it.
     // comes in on REST
-      vTaskDelay(100 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
   }
   Serial.print("MQTT_IP Found=");
   Serial.println(MQTT_IP);
 
-    // send debug boot up MQTT message
+  // send debug boot up MQTT message
 #ifdef EXTDEBUG
   String myMQTTMessage;
   myMQTTMessage = SGSEXTENDERESP32VERSION;

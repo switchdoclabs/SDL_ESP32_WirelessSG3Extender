@@ -182,6 +182,14 @@ void updateDisplay(int displayMode)
         }
         break;
 
+
+      case DISPLAY_WAITMQTTIP:
+        {
+          setDisplayLineLCD(0, "Waiting for MQTT IP Address");
+          setDisplayLineLCD(1, "Start SG3 on Pi");
+
+        }
+        break;
       case DISPLAY_IPNAMEID:
         {
           sprintf(buffer, "Device: %s", myID);
@@ -492,7 +500,7 @@ void writeAllDisplayLines(int DisplayMode)
 
     case DISPLAY_IPDISPLAY:
     case DISPLAY_IPNAMEID:
-
+    case DISPLAY_WAITMQTTIP:
     case DISPLAY_ACCESSPOINT:
     case DISPLAY_TRYING_AP:
     case DISPLAY_FAILING_AP:
