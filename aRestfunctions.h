@@ -297,14 +297,44 @@ int enableHydroponicsMode(String command) {
 
 // Water Commands
 
+int testHydroponicsSensorsCommand(String command)
+{
+  // admin password, returns 4 ADC sensors
 
+  // command format:     admin, password
+  RESTreturnString = "";
+  Serial.println("---------->REST: testHydroponics");
+  Serial.print("Command =");
+  Serial.println(command);
+  String password;
+  String mySensors;
+  password = getValue(command, ',', 0);
+  if (password == adminPassword)
+  {
+
+    int i;
+
+    xSemaphoreTake( xSemaphoreSensorsBeingRead, 30000);
+    mySensors = readADCSensors();
+    //sendMQTT(MQTTHYDROPONICS, "");
+    xSemaphoreGive( xSemaphoreSensorsBeingRead);
+
+    RESTreturnString = mySensors;
+    Serial.print("RESTreturnString=");
+    Serial.println(RESTreturnString);
+
+    return 0;
+  }
+  return 1;
+  
+}
 
 int readHydroponicsSensorsCommand(String command) {
   // admin password, returns 4 ADC sensors
 
   // command format:     admin, password
   RESTreturnString = "";
-  Serial.println("---------->REST: readMoistureSensors");
+  Serial.println("---------->REST: readHydroponics");
   Serial.print("Command =");
   Serial.println(command);
   String password;

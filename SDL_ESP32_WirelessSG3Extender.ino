@@ -3,7 +3,7 @@
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "057"
+#define SGSEXTENDERESP32VERSION "058"
 
 
 #define CONTROLLERBOARD "V1"
@@ -1216,6 +1216,7 @@ void setup()
   rest.function("getValveState", getValveState);
   rest.function("setSingleValve", setSingleValve);
 
+  rest.function("testHydroponicsSensors", testHydroponicsSensorsCommand);
   rest.function("readHydroponicsSensors", readHydroponicsSensorsCommand);
   rest.function("blinkPixelCommand", blinkPixelCommand);
   rest.function("setStationName", setStationName);
