@@ -7,6 +7,7 @@ unsigned int darkLight;
 String WiFi_SSID = "";
 String WiFi_psk = "";
 int ClockTimeOffsetToUTC = 0;
+void readPreferences();
 
 void resetPreferences()
 {
@@ -16,12 +17,13 @@ void resetPreferences()
 
   ClockTimeOffsetToUTC = DEFAULTCLOCKTIMEOFFSETTOUTC;
   Serial.println("----Clearing Preferences---");
+  readPreferences();
 
 
 }
 
 
-void readPreferences();
+
 
 void writePreferences()
 {

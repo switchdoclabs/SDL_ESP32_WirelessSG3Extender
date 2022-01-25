@@ -3,7 +3,7 @@
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "058"
+#define SGSEXTENDERESP32VERSION "059"
 
 
 #define CONTROLLERBOARD "V1"
@@ -884,6 +884,8 @@ void setup()
     Serial.println("Preferences Reset by AUX Button");
 
   }
+  Serial.print("aux switch=");
+  Serial.println(digitalRead(15));
 
 
   // RTOS
