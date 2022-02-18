@@ -51,6 +51,44 @@ void updateDisplay(int displayMode)
 
 
 
+      case DISPLAY_UPDATING:
+        Serial.println("Updating SG3WExt Software");
+
+
+
+        setDisplayLineLCD(0,  "SG3WExt Updating");
+        setDisplayLineLCD(1, "");
+
+
+        break;
+
+      case DISPLAY_UPDATE_FINISHED:
+        Serial.println("Finish SG3WExt Software");
+
+
+
+        setDisplayLineLCD(0,  "SG3WExt Updated");
+        setDisplayLineLCD(1, "Unplug Power");
+        
+
+        break;
+
+      case DISPLAY_NO_UPDATE_AVAILABLE:
+        setDisplayLineLCD(0,  "You have the most");
+        setDisplayLineLCD(1, "recent software");
+
+
+        break;
+
+      case DISPLAY_NO_UPDATE_FAILED:
+        setDisplayLineLCD(0,  "Update Failed.");
+        setDisplayLineLCD(1, "Try again later.");
+    
+
+        break;
+
+
+
 
       case DISPLAY_POWERUP:
         Serial.println("SGS3WExt Booting Up");

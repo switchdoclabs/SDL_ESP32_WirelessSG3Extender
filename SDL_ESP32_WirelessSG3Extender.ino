@@ -3,7 +3,7 @@
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "059"
+#define SGSEXTENDERESP32VERSION "060"
 
 
 #define CONTROLLERBOARD "V1"
@@ -1304,7 +1304,7 @@ void setup()
     NULL,             /* Parameter passed as input of the task */
     3,                /* Priority of the task. */
     NULL,             /* Task handle. */
-    0);               // Specific Core
+    1);               // Specific Core
   //Serial.print("Pre taskSetValues SetupxSemaphoreUseI2C=");
   // Serial.println(uxSemaphoreGetCount( xSemaphoreUseI2C ));
 

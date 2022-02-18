@@ -326,7 +326,7 @@ int testHydroponicsSensorsCommand(String command)
     return 0;
   }
   return 1;
-  
+
 }
 
 int readHydroponicsSensorsCommand(String command) {
@@ -667,7 +667,7 @@ int updateSGS(String command)
     updateDisplay(DISPLAY_UPDATING);
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     String fwVersionURL;
-    fwVersionURL = "http://www.switchdoc.com/binSGS/SGSWExtCurrentFirmware.html";
+    fwVersionURL = "http://www.switchdoc.com/binSGS/SGSWExtCurrentFirmware1.html";
     // Get the values for the update software
 
     HTTPClient httpClient;
@@ -689,7 +689,8 @@ int updateSGS(String command)
         // shut down Pixel LED
 
         xSemaphoreTake( xSemaphorePixelPulse, 10000); // Stop the flashing light
-
+        xSemaphoreTake( xSemaphoreOLEDLoopUpdate, 10000);
+        xSemaphoreTake( xSemaphoreKeepMQTTAlive, 10000);
 
       }
       else
@@ -700,9 +701,6 @@ int updateSGS(String command)
         return 2;
       }
     }
-
-
-
 
     String fwImageURL;
     newFWVersion.trim();
@@ -717,6 +715,8 @@ int updateSGS(String command)
         vTaskDelay(5000 / portTICK_PERIOD_MS);
         xSemaphoreGive( xSemaphoreRESTCommand);
         xSemaphoreGive( xSemaphorePixelPulse); //Restart the flashing
+        xSemaphoreGive( xSemaphoreOLEDLoopUpdate);
+        xSemaphoreGive( xSemaphoreKeepMQTTAlive);
         return 1;
 
         break;

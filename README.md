@@ -5,6 +5,7 @@ SmartGarden3
 
 ESP32 Wireless Extender
 
+February 18, 2022 Version 060 - Release version - added OTA
 January 24, 2022 Version 058 - Support added for SG3 System Test 
 January 21, 2022 Version 057 - Initial Release
 
