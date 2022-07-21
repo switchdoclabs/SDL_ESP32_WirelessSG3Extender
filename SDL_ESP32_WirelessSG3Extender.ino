@@ -3,7 +3,7 @@
 // SwitchDoc Labs, LLC
 //
 
-#define SGSEXTENDERESP32VERSION "060"
+#define SGSEXTENDERESP32VERSION "062"
 
 
 #define CONTROLLERBOARD "V1"
@@ -979,8 +979,20 @@ void setup()
   // Append the last two bytes of the MAC (HEX'd) to string to make unique
   uint8_t mac[WL_MAC_ADDR_LENGTH];
   WiFi.softAPmacAddress(mac);
-  macID = String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
-          String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
+
+  String FirstPart;
+  String SecondPart;
+
+  FirstPart = String(mac[WL_MAC_ADDR_LENGTH - 2], HEX);
+  SecondPart = String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
+
+
+  macID = FirstPart + SecondPart;
+
+  if (macID.length() < 4)
+  {
+    macID = "0" + macID;
+  }
   macID.toUpperCase();
   myID = macID;
 
@@ -1227,7 +1239,7 @@ void setup()
   rest.function("restartMQTT", restartMQTT);
   rest.function("assignBluetoothSensors", assignBluetoothSensors);
   rest.function("enableHydroponicsMode", enableHydroponicsMode);
-    rest.function("rebootExtender", rebootExtender);
+  rest.function("rebootExtender", rebootExtender);
 
   rest.function("updateSGS", updateSGS);
 

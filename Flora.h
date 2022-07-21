@@ -319,7 +319,7 @@ bool processFloraDevice(BLEAddress floraAddress, char* deviceMacAddress, bool ge
 
 
         LastMoistureBluetoothRead[i] = latestFloraData.moisture;
-        i = 8;
+        i = MAXBLUETOOTHDEVICES;
 
       }
     }

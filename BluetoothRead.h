@@ -45,7 +45,7 @@ void readBluetooth()
     #endif
 
           }
-          Serial.println(">>>>>>>>>>>>>>>>>>>>>>>>>>> RETRYING Bluetooth: ");
+          Serial.println(">>>>>>>>>>>>>>>>>>>>>>>>>>> RETRYING Bluetooth: "); 
           vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
         vTaskDelay(1500 / portTICK_PERIOD_MS);

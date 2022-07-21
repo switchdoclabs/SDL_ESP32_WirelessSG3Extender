@@ -220,9 +220,20 @@ bool localAPGetIP(long apTimeOutSeconds)
   // Append the last two bytes of the MAC (HEX'd) to string to make unique
   uint8_t mac[WL_MAC_ADDR_LENGTH];
   WiFi.softAPmacAddress(mac);
-  macID = String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
-                 String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
+  String FirstPart;
+  String SecondPart;
+
+  FirstPart = String(mac[WL_MAC_ADDR_LENGTH - 2], HEX);
+  SecondPart = String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
+  
+
+  macID = FirstPart + SecondPart;
   macID.toUpperCase();
+  
+  if (macID.length() < 4)
+  {
+    macID = "0" + macID;
+  }
   APssid = "SG3WExt-" + macID;
 
 
